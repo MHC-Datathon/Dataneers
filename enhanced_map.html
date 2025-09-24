@@ -1,3 +1,1847 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:3228407ffd54637e3a6a06d272b204191740ad56904350c11ada62f8895d553c
-size 76710
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>NYC Motor Vehicle Crashes vs ACE Enforcement Analysis</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.7.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: white;
+        }
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        
+        .unified-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(180deg, #181818 0%, #121212 100%);
+            padding: 0;
+            box-shadow: 0 -8px 32px rgba(0,0,0,0.6);
+            font-size: 12px;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            z-index: 1000;
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            border-top: 1px solid #282828;
+        }
+
+        .unified-panel h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        
+        .stat {
+            margin: 0;
+            color: #b3b3b3;
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 1.4;
+        }
+        
+        .view-controls {
+            margin: 20px 0;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        
+        .data-toggle {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+        }
+        
+        .data-toggle > div {
+            white-space: nowrap;
+            font-weight: 600;
+            margin-right: 8px;
+            color: #ffffff;
+            font-size: 13px;
+        }
+        
+        .toggle-buttons {
+            display: flex;
+            gap: 6px;
+            margin: 0;
+            align-items: center;
+        }
+        
+        .toggle-buttons button {
+            font-size: 10px;
+            padding: 6px 12px;
+            text-align: center;
+            white-space: nowrap;
+            min-width: fit-content;
+            border-radius: 16px;
+        }
+        
+        #congestion-toggle {
+            min-width: 80px;
+            padding: 6px 16px;
+        }
+        
+        .temporal-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px 8px 24px;
+            flex-grow: 1;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0px 24px 2px 24px;
+            margin-top: -12px;
+            gap: 6px;
+        }
+        
+        .slider-date-label {
+            font-size: 11px;
+            color: #ffffff;
+            white-space: nowrap;
+            font-weight: 400;
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        .time-slider {
+            width: 400px;
+            height: 4px;
+            border-radius: 2px;
+            background: #4f4f4f;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .time-slider:hover {
+            background: #535353;
+        }
+        
+        .time-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .time-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #1db954;
+        }
+        
+        .time-slider::-moz-range-thumb {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .month-display {
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            margin: 0;
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+        }
+        
+        .crash-count, .ace-count {
+            font-size: 13px;
+            color: #b3b3b3;
+            margin: 0;
+            white-space: nowrap;
+            font-weight: 400;
+        }
+        
+        button {
+            background: #2a2a2a;
+            color: #b3b3b3;
+            border: none;
+            padding: 8px 16px;
+            margin: 0;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            text-transform: capitalize;
+        }
+        
+        button:hover {
+            background: #3e3e3e;
+            color: #ffffff;
+            transform: scale(1.02);
+        }
+        
+        button.active {
+            background: #1db954;
+            color: #000000;
+            font-weight: 600;
+        }
+        
+        button.active:hover {
+            background: #1ed760;
+            transform: scale(1.02);
+        }
+        
+        .play-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            left: 50%;
+            top: 10px;
+            transform: translateX(-50%);
+        }
+        
+        .nav-button {
+            background: transparent;
+            border: none;
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: 22px 22px;
+            background-repeat: no-repeat;
+            background-position: center;
+            filter: brightness(0) invert(1) opacity(0.6);
+            transition: all 0.1s ease;
+        }
+        
+        
+        .nav-button.prev {
+            background-image: url('Image_Sources/spotprev.png');
+        }
+        
+        .nav-button.next {
+            background-image: url('Image_Sources/spotnext.png');
+        }
+        
+        
+        .nav-button:hover {
+            filter: brightness(1) invert(0) opacity(1);
+        }
+        
+        .nav-button:focus {
+            outline: none !important;
+        }
+        
+        .nav-button:active {
+            /* No changes on click */
+        }
+        
+        /* Route Toggle Slider Styles */
+        .route-toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .route-toggle-label {
+            font-size: 10px;
+            color: #b3b3b3;
+            font-weight: 400;
+        }
+        
+        .route-toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 18px;
+        }
+        
+        .route-toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .route-toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4a4a4a;
+            transition: .3s;
+            border-radius: 18px;
+        }
+        
+        .route-toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        
+        .route-toggle-switch input:checked + .route-toggle-slider {
+            background-color: #1db954;
+        }
+        
+        .route-toggle-switch input:checked + .route-toggle-slider:before {
+            transform: translateX(18px);
+        }
+        
+        .play-button {
+            background: #ffffff;
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.2s ease;
+            font-size: 24px;
+            color: #000000;
+            font-weight: 600;
+            line-height: 1;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            position: relative;
+        }
+        
+        .play-button::after {
+            content: attr(data-symbol);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+        }
+        
+        .play-button[data-symbol="▶"]::after {
+            transform: translate(calc(-50% + 2px), calc(-50% - 1px));
+            font-size: 24px;
+        }
+        
+        .play-button[data-symbol="⏸"]::after {
+            transform: translate(calc(-50% + 1px), calc(-50% - 2px));
+            font-size: 28px;
+        }
+        
+        
+        .play-button.playing {
+            background-image: url('Image_Sources/spotplay.png');
+        }
+        
+        .play-button.paused {
+            background-image: url('Image_Sources/spotplay.png');
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 2000;
+        }
+
+        .legend {
+            margin: 0;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 1px solid #fff;
+        }
+        
+        /* Left sidebar for charts - full-page scroll style */
+        .charts-sidebar {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            width: 420px;
+            height: 80vh;
+            max-height: 700px;
+            background: linear-gradient(180deg, #181818 0%, #121212 100%);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            z-index: 1000;
+            border: 1px solid #282828;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            scroll-behavior: smooth;
+        }
+        
+        .charts-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #282828;
+            background: #181818;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .charts-header h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .chart-counter {
+            color: #b3b3b3;
+            font-size: 14px;
+        }
+        
+        .chart-display {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        
+        .chart-display::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .chart-section {
+            height: 100%;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            position: relative;
+            align-items: stretch;
+            text-align: left;
+        }
+        
+        .chart-title {
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            min-height: 350px;
+        }
+        
+        .chart-image {
+            width: 95%;
+            height: auto;
+            max-height: 90%;
+            min-height: 300px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            object-fit: contain;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            background: transparent;
+        }
+        
+        .chart-section:not(.active) .chart-image {
+            transform: scale(0.95);
+            opacity: 0.7;
+        }
+        
+        .chart-section.active .chart-image {
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        .scroll-instructions {
+            text-align: center;
+            color: #888;
+            font-size: 12px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #444;
+        }
+        
+        .chart-progress {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+        
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(179, 179, 179, 0.3);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .progress-dot.active {
+            background: #1db954;
+            transform: scale(1.2);
+        }
+        
+        /* Story content styling */
+        .story-content {
+            color: #b3b3b3;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        
+        .story-content p {
+            margin-bottom: 14px;
+        }
+        
+        .story-content strong {
+            color: #ffffff;
+        }
+        
+        .story-content ol, .story-content ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .story-content li {
+            margin-bottom: 6px;
+        }
+        
+        .data-highlight {
+            background: rgba(29, 185, 84, 0.15);
+            border-left: 3px solid #1db954;
+            padding: 8px 12px;
+            margin: 10px 0;
+            border-radius: 3px;
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+        }
+        
+        .ace-info {
+            background: rgba(255, 165, 0, 0.15);
+            border-left: 3px solid #ffa500;
+            padding: 8px 12px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        
+        .finding-box {
+            background: rgba(220, 20, 60, 0.15);
+            border-left: 3px solid #dc143c;
+            padding: 8px 12px;
+            margin: 10px 0;
+            border-radius: 3px;
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+        }
+        
+        .data-note {
+            background: rgba(128, 128, 128, 0.15);
+            border-left: 3px solid #808080;
+            padding: 6px 10px;
+            margin: 10px 0;
+            border-radius: 3px;
+            font-size: 12px;
+            font-style: italic;
+            display: inline-block;
+            width: fit-content;
+            max-width: 100%;
+        }
+        
+        .solutions-list {
+            margin: 15px 0;
+        }
+        
+        .solution-item {
+            background: rgba(40, 40, 40, 0.4);
+            padding: 8px 12px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+        
+        .solution-item p {
+            margin: 6px 0 0 0;
+            font-size: 13px;
+        }
+        
+        .conclusion-summary {
+            background: rgba(50, 50, 50, 0.4);
+            padding: 10px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            border: 1px solid #555;
+        }
+        
+        .conclusion-summary h4 {
+            margin: 0 0 8px 0;
+            color: #fff;
+        }
+        
+        .next-steps {
+            background: rgba(0, 100, 0, 0.15);
+            border-left: 3px solid #008000;
+            padding: 8px 12px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+        
+        .scroll-hint {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            color: #888;
+            font-size: 12px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Mapbox popup dark theme and minimal border */
+        .mapboxgl-popup {
+            z-index: 1500;
+        }
+
+        .mapboxgl-popup-content {
+            background: rgba(0,0,0,0.7); /* semi-transparent dark background */
+            color: #ffffff;
+            border: 0; /* remove white border entirely */
+            padding: 10px 12px; /* compact */
+            border-radius: 6px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        }
+
+        .mapboxgl-popup-close-button {
+            color: #cccccc;
+        }
+
+        /* Ensure the popup tip matches the semi-transparent dark background for all anchors */
+        .mapboxgl-popup-tip {
+            border-top-color: rgba(0,0,0,0.7) !important;
+            border-bottom-color: rgba(0,0,0,0.7) !important;
+            border-left-color: rgba(0,0,0,0.7) !important;
+            border-right-color: rgba(0,0,0,0.7) !important;
+        }
+    </style>
+</head>
+<body>
+    <div id='map'></div>
+    <div id="loading" class="loading">Loading crash and ACE data...</div>
+    
+    <!-- Story Sidebar -->
+    <div class="charts-sidebar" id="story-sidebar">
+        <div class="charts-header">
+            <h3><img src="Image_Sources/MTA_NYC_logo.svg.png" alt="MTA Logo" style="height: 20px; width: auto; margin-right: 8px; vertical-align: middle;">NYC Bus ACE Analysis</h3>
+            <div class="chart-counter" id="section-counter">1 / 12</div>
+        </div>
+        <div class="chart-display" id="story-display">
+            <!-- Section 1: Introduction -->
+            <div class="chart-section active" data-section="1">
+                <div class="chart-title">NYC Bus System & ACE</div>
+                <div class="story-content">
+                    <p>The New York City bus system serves over a million riders per day. Despite this, the system is plagued with delays and crawling speeds, partially due to illegally parked vehicles obstructing the buses' path.</p>
+                    <p>One method employed by the MTA to combat this is <strong>Automated Camera Enforcement (ACE)</strong>.</p>
+                    <p><strong>Three key questions:</strong></p>
+                    <ol>
+                        <li>What is the recidivism rate of ticketed vehicles?</li>
+                        <li>How has ACE affected bus speeds vs non-ACE routes?</li>
+                        <li>Has ACE reduced accidents?</li>
+                    </ol>
+                    <div class="scroll-hint">↓ Scroll to explore our analysis</div>
+                </div>
+            </div>
+            
+            <!-- Section 2: What is ACE -->
+            <div class="chart-section" data-section="2">
+                <div class="chart-title">What is ACE?</div>
+                <div class="story-content">
+                    <p>ACE is the MTA's automated camera enforcement system. In mid-2024, the existing ABLE ticketing system was expanded into ACE.</p>
+                    <p><strong>ABLE</strong> (Automated Bus Lane Enforcement) only ticketed vehicles blocking bus lanes or stops.</p>
+                    <p><strong>ACE expanded</strong> to include double-parked and other illegally parked vehicles.</p>
+                    <div class="ace-info">
+                        <strong>How it works:</strong> If two buses record a vehicle engaging in illegal parking behavior more than 5 minutes apart, the vehicle receives a $50 ticket. Each subsequent ticket increases by $50 until reaching the $250 cap.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 3: ACE Categories -->
+            <div class="chart-section" data-section="3">
+                <div class="chart-title">Ticketing Recidivism</div>
+                <div class="story-content">
+                    <p><strong>ACE violations are broken down into 7 categories:</strong></p>
+                    <ol>
+                        <li>Violation Issued</li>
+                        <li>Exempt: Emergency Vehicle</li>
+                        <li>Exempt: Small Commercial Vehicle</li>
+                        <li>Exempt: Bus/Paratransit Service</li>
+                        <li>Exempt: Other</li>
+                        <li>Driver/Vehicle Info Missing (no ticket)</li>
+                        <li>Technical Issue/Other (no ticket)</li>
+                    </ol>
+                    <p><em>For analysis, exempt categories are generally grouped together.</em></p>
+                </div>
+            </div>
+            
+            <!-- Section 4: Basic ACE Data -->
+            <div class="chart-section" data-section="4">
+                <div class="chart-title">Basic ACE Statistics</div>
+                <div class="story-content">
+                    <div class="data-highlight">
+                        <strong>Key Finding:</strong> Over 1 million unique cars received violations, with 2.3 million total tickets issued.
+                    </div>
+                    <p>The median and mode is 1 ticket per vehicle, but the mean is 2.26 - indicating a <strong>small group of repeat offenders</strong> driving up the average.</p>
+                    <p>Emergency vehicles and Paratransit have significantly higher averages (13.3 and 7.7 tickets respectively), suggesting <strong>structural issues</strong> in city space allocation.</p>
+                </div>
+            </div>
+            
+            <!-- Section 5: Vehicle Distribution Chart -->
+            <div class="chart-section" data-section="5">
+                <div class="chart-title">Vehicle Ticket Distribution</div>
+                <div class="chart-container">
+                    <img src="Data_Charts/Percent of Vechiles recieving # of tickets.png" alt="Vehicle Ticket Distribution" class="chart-image">
+                </div>
+                <div class="story-content">
+                    <p><strong>60.1%</strong> of vehicles received only one ticket</p>
+                    <p><strong>2.4%</strong> of vehicles received more than 10 tickets</p>
+                    <p>For exempt vehicles: <strong>11%</strong> received over 10 violations</p>
+                </div>
+            </div>
+            
+            <!-- Section 6: Violations Distribution -->
+            <div class="chart-section" data-section="6">
+                <div class="chart-title">Ticket Distribution Analysis</div>
+                <div class="chart-container">
+                    <img src="Data_Charts/Recidivism Violation.png" alt="Recidivism Violations" class="chart-image">
+                </div>
+                <div class="story-content">
+                    <div class="data-highlight">
+                        Despite only <strong>2.4%</strong> of vehicles receiving 10+ tickets, they account for <strong>19.7%</strong> of all tickets issued.
+                    </div>
+                    <p>Almost half of all tickets went to vehicles with 4+ prior tickets, despite being only 13.6% of total vehicles.</p>
+                </div>
+            </div>
+            
+            <!-- Section 7: Exempt Violations -->
+            <div class="chart-section" data-section="7">
+                <div class="chart-title">Exempt Vehicle Analysis</div>
+                <div class="chart-container">
+                    <img src="Data_Charts/Recidivism Exempt.png" alt="Exempt Recidivism" class="chart-image">
+                </div>
+                <div class="story-content">
+                    <div class="data-highlight">
+                        <strong>66.9%</strong> of all exempt violations were given to vehicles with 10+ prior instances.
+                    </div>
+                    <p>This indicates <strong>structural issues</strong> in the city regarding space allocation as Paratransit, commercial, and emergency vehicles are forced into violating parking laws.</p>
+                </div>
+            </div>
+            
+            <!-- Section 8: Monthly Trends -->
+            <div class="chart-section" data-section="8">
+                <div class="chart-title">Violations by Route & Month</div>
+                <div class="chart-container">
+                    <img src="Data_Charts/Violations Issued of Select Charts.png" alt="Monthly Violations" class="chart-image">
+                </div>
+                <div class="story-content">
+                    <p><strong>Pattern observed:</strong> Spike in tickets May-September 2024 (ABLE to ACE transition) and March-April 2025 (ACE expansion).</p>
+                    <p><strong>BX19 and M101</strong> have the highest number of tickets by far.</p>
+                </div>
+            </div>
+            
+            <!-- Section 9: Solutions -->
+            <div class="chart-section" data-section="9">
+                <div class="chart-title">Proposed Solutions</div>
+                <div class="story-content">
+                    <p>Similar to "super speeders" in camera enforcement, we propose:</p>
+                    <div class="solutions-list">
+                        <div class="solution-item">
+                            <strong>1. Harsher Fines</strong>
+                            <p>Raise the $250 cap and partner with NYPD for unpaid ticket enforcement.</p>
+                        </div>
+                        <div class="solution-item">
+                            <strong>2. State Legislation</strong>
+                            <p>Adopt "super parker" bill similar to proposed "super speeder" legislation.</p>
+                        </div>
+                        <div class="solution-item">
+                            <strong>3. Street Redesigns</strong>
+                            <p>Dedicated commercial loading zones and emergency vehicle lanes on high-violation routes.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 10: Speed Impact -->
+            <div class="chart-section" data-section="10">
+                <div class="chart-title">Impact on Bus Speeds</div>
+                <div class="story-content">
+                    <p>Analysis of average MPH changes on ACE routes compared to non-ACE routes.</p>
+                    <p><em>Speed analysis charts would be displayed here based on available data.</em></p>
+                    <div class="data-note">
+                        Note: Congestion pricing zone overlay provides additional context for speed improvements.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 11: Accident Analysis -->
+            <div class="chart-section" data-section="11">
+                <div class="chart-title">Did ACE Reduce Accidents?</div>
+                <div class="story-content">
+                    <p>We analyzed the impact of ACE on car accidents and fatalities.</p>
+                    <p><strong>Hypothesis:</strong> ACE expansion would reduce crashes, similar to red light and speeding cameras.</p>
+                    <div class="finding-box">
+                        <strong>Finding:</strong> Our data shows ACE has <strong>minimal, if any, impact</strong> on accidents.
+                    </div>
+                    <p>Unlike speeding or red light violations, illegal parking appears to affect road <em>efficiency</em> more than safety.</p>
+                </div>
+            </div>
+            
+            <!-- Section 12: Conclusion -->
+            <div class="chart-section" data-section="12">
+                <div class="chart-title">Conclusion</div>
+                <div class="story-content">
+                    <div class="conclusion-summary">
+                        <h4>Key Findings:</h4>
+                        <ul>
+                            <li>High recidivism among small group of "super parkers"</li>
+                            <li>Structural issues force exempt vehicles into violations</li>
+                            <li>ACE improves efficiency but has minimal safety impact</li>
+                            <li>Solutions require policy changes and street redesigns</li>
+                        </ul>
+                    </div>
+                    <div class="next-steps">
+                        <strong>Further research needed:</strong> Post-COVID traffic recovery analysis and long-term ACE effectiveness studies.
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Progress indicators -->
+        <div class="chart-progress" id="progress-dots">
+            <!-- Dots will be generated by JavaScript -->
+        </div>
+    </div>
+    
+    <div class="unified-panel" style="display: none;" id="control-panel">
+        <!-- Top Row: Main Controls -->
+        <div class="temporal-section">
+            <!-- Left: Date and Data Info -->
+            <div style="display: flex; flex-direction: column; gap: 3px; min-width: 200px;">
+                <div class="month-display" id="month-display">Loading...</div>
+                <div style="display: flex; gap: 8px; font-size: 10px; color: #b3b3b3;">
+                    <div class="crash-count" id="crash-count">Loading...</div>
+                    <span style="color: #535353;">•</span>
+                    <div class="ace-count" id="ace-count">Loading...</div>
+                </div>
+            </div>
+            
+            <!-- Center: Play Controls -->
+            <div class="play-controls">
+                <button class="nav-button prev" onclick="previousMonth()"></button>
+                <button id="play-button" class="play-button" data-symbol="▶" onclick="toggleAnimation()"></button>
+                <button class="nav-button next" onclick="nextMonth()"></button>
+            </div>
+            
+            <!-- Right: Layers and Legend -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; min-width: 300px;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <div class="data-toggle">
+                        <div>Toggleable Layers</div>
+                        <div class="toggle-buttons">
+                            <button id="crashes-toggle" class="active" onclick="toggleCrashes()">Crashes</button>
+                            <button id="ace-toggle" class="active" onclick="toggleACE()">ACE</button>
+                            <button id="transit-toggle" class="active" onclick="toggleTransit()">Routes</button>
+                            <button id="stops-toggle" class="active" onclick="toggleStops()">Bus Stops</button>
+                            <button id="congestion-toggle" class="active" onclick="toggleCongestionZone()">Congestion</button>
+                        </div>
+                    </div>
+                    
+                    <div style="width: 1px; height: 40px; background: #282828; margin: 0 8px;"></div>
+                    
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div style="background: linear-gradient(90deg, #4169e1, #ffd700, #dc143c); width: 24px; height: 6px; border-radius: 3px;"></div>
+                            <span style="color: #b3b3b3; font-size: 10px;">Crashes</span>
+                        </div>
+                        <div class="legend-item">
+                            <div style="background: linear-gradient(90deg, #8a2be2, #ff1493); width: 24px; height: 6px; border-radius: 3px;"></div>
+                            <span style="color: #b3b3b3; font-size: 10px;">ACE</span>
+                        </div>
+                        <div class="legend-item">
+                            <div style="background: #FFD700; width: 12px; height: 12px; border-radius: 2px; opacity: 0.8;"></div>
+                            <span style="color: #b3b3b3; font-size: 10px;">Congestion Zone</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 8px; display: flex; align-items: center; align-self: flex-start; gap: 12px;">
+                    <span style="font-size: 11px; color: #ffffff; font-weight: 600;">Route Coloring:</span>
+                    <span style="font-size: 10px; color: #b3b3b3; margin-right: 8px;">Regular</span>
+                    <label class="route-toggle-switch">
+                        <input type="checkbox" id="ace-mode-toggle" onchange="toggleACEMode()">
+                        <span class="route-toggle-slider"></span>
+                    </label>
+                    <span style="font-size: 10px; color: #b3b3b3; margin-left: 8px;">ACE Mode</span>
+                    
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 16px;">
+                        <div class="legend-item" style="margin: 0; gap: 4px;">
+                            <div style="background: #FF6B6B; width: 16px; height: 4px; border-radius: 2px;"></div>
+                            <span style="color: #b3b3b3; font-size: 9px;">ACE Routes</span>
+                        </div>
+                        <div class="legend-item" style="margin: 0; gap: 4px;">
+                            <div style="background: #0066CC; width: 16px; height: 4px; border-radius: 2px;"></div>
+                            <span style="color: #b3b3b3; font-size: 9px;">Non-ACE Routes</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Row: Progress Slider -->
+        <div class="slider-container">
+            <div class="slider-date-label" id="slider-start-date">Sep 2024</div>
+            <input type="range" min="0" max="100" value="0" class="time-slider" id="time-slider">
+            <div class="slider-date-label" id="slider-end-date">Dec 2023</div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let map;
+        let config;
+        let combinedData = null;
+        let transitData = null;
+        let currentMonthIndex = 0;
+        let animationId = null;
+        let isPlaying = false;
+        let currentViewMode = 'heatmap';
+        let showCrashes = true;
+        let showACE = true;
+        let showTransit = true;
+        let showStops = true;
+        let showCongestionZone = true;
+        let aceMode = false; // false = regular colors, true = ACE coloring
+
+        // Initialize the application
+        async function initApp() {
+            try {
+                // Load configuration and combined data
+                console.log('Loading configuration...');
+                const configResponse = await fetch('config.json');
+                
+                if (!configResponse.ok) {
+                    throw new Error(`Config fetch failed: ${configResponse.status} ${configResponse.statusText}`);
+                }
+                
+                config = await configResponse.json();
+                console.log('✅ Config loaded successfully');
+                
+                console.log('Loading crash and ACE data...');
+                const dataResponse1 = await fetch('data_part1.json');
+                
+                if (!dataResponse1.ok) {
+                    throw new Error(`Data part 1 fetch failed: ${dataResponse1.status} ${dataResponse1.statusText}`);
+                }
+                
+                const part1Data = await dataResponse1.json();
+                console.log('✅ Part 1 data loaded successfully');
+                
+                console.log('Loading transit data...');
+                const dataResponse2 = await fetch('data_part2.json');
+                
+                if (!dataResponse2.ok) {
+                    throw new Error(`Data part 2 fetch failed: ${dataResponse2.status} ${dataResponse2.statusText}`);
+                }
+                
+                const part2Data = await dataResponse2.json();
+                console.log('✅ Part 2 data loaded successfully');
+                
+                // Combine the data
+                combinedData = {
+                    crash_data: part1Data.crash_data,
+                    ace_data: part1Data.ace_data,
+                    transit_data: part2Data.transit_data
+                };
+                transitData = combinedData.transit_data;
+                console.log('✅ Combined data assembled successfully');
+                
+                // Initialize map
+                initMap();
+                
+                // Setup UI
+                setupUI();
+                
+                console.log('✅ Application initialized successfully');
+                
+            } catch (error) {
+                console.error('❌ Failed to load data:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="color: #ff6b6b; max-width: 400px;">
+                        <h3>Failed to load data</h3>
+                        <p><strong>Error:</strong> ${error.message}</p>
+                        <p>Make sure you have run the ACE+Crash data generation script first.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function initMap() {
+            mapboxgl.accessToken = config.mapbox_token;
+            
+            map = new mapboxgl.Map({
+                container: 'map',
+                style: 'mapbox://styles/mapbox/dark-v11',
+                center: config.map_center,
+                zoom: config.map_zoom,
+                maxBounds: config.map_bounds,
+                minZoom: config.min_zoom,
+                maxZoom: 22,
+                maxPitch: 0,
+                dragRotate: false
+            });
+
+            map.on('load', () => {
+                console.log('Map loaded successfully');
+                setupMapLayers();
+                
+                // Now that map is loaded, update visualization and show controls
+                updateVisualization();
+                
+                // Initialize story navigation
+                initStoryNavigation();
+                
+                // Hide loading screen and show controls
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('control-panel').style.display = 'block';
+            });
+        }
+
+        function setupMapLayers() {
+            // Add sources for crashes and ACE data
+            map.addSource('crashes', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: []
+                }
+            });
+            
+            map.addSource('ace-cameras', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: []
+                }
+            });
+            
+            // Add transit sources
+            map.addSource('bus-routes', {
+                type: 'geojson',
+                data: transitData.bus_routes
+            });
+            
+            map.addSource('bus-stops', {
+                type: 'geojson',
+                data: transitData.bus_stops
+            });
+            
+            // Add NYC congestion zone source with actual zone boundaries
+            map.addSource('congestion-zone', {
+                type: 'geojson',
+                data: {
+                    type: 'FeatureCollection',
+                    features: [
+                        {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[[-73.9592177, 40.7586545], [-73.962899, 40.76024], [-73.9627109, 40.760574], [-73.9627582, 40.7606411], [-73.9628166, 40.7607121], [-73.9628738, 40.7608792], [-73.9629361, 40.76094], [-73.9676372, 40.7630327], [-73.9724084, 40.765044], [-73.9733357, 40.7654104], [-73.9737672, 40.7649272], [-73.9808602, 40.7679278], [-73.980963, 40.7686397], [-73.9924605, 40.7733774], [-73.9932823, 40.7722103], [-73.9938511, 40.7713617], [-73.9941206, 40.769898], [-73.9954558, 40.7678198], [-73.9966746, 40.7659769], [-73.9981835, 40.7639838], [-73.9991778, 40.763033], [-74.0007645, 40.7616972], [-74.0018318, 40.7605226], [-74.0027558, 40.7591771], [-74.0037781, 40.7576249], [-74.0046729, 40.7563681], [-74.0059159, 40.7548219], [-74.0066243, 40.7537403], [-74.0074232, 40.75159], [-74.0077323, 40.750352], [-74.0072282, 40.7487739], [-74.007489, 40.7462796], [-74.0078666, 40.7443744], [-74.0082923, 40.7422208], [-74.008537, 40.7407296], [-74.0093292, 40.7391995], [-74.0093558, 40.7375952], [-74.0098554, 40.7325933], [-74.0100089, 40.7310901], [-74.0100665, 40.7298182], [-74.01033, 40.7275663], [-74.0107424, 40.725111], [-74.0112211, 40.7223279], [-74.0119076, 40.7186505], [-74.0128193, 40.7149813], [-74.0134758, 40.7130675], [-74.0139728, 40.7111899], [-74.014148, 40.7102593], [-74.0143983, 40.7093939], [-74.0149532, 40.7077046], [-74.0145764, 40.7072464], [-74.0143834, 40.7069803], [-74.0142825, 40.7065119], [-74.01447, 40.706057], [-74.014624, 40.705705], [-74.014794, 40.705301], [-74.0149415, 40.7046603], [-74.014407, 40.704454], [-74.01462, 40.703356], [-74.014494, 40.70283], [-74.013971, 40.702303], [-74.0132, 40.7022574], [-74.0129592, 40.7022462], [-74.01286, 40.701722], [-74.0125562, 40.7015574], [-74.0111477, 40.7018365], [-74.0096568, 40.702318], [-74.008178, 40.7032417], [-74.0064798, 40.7043884], [-74.0034072, 40.70636], [-74.0004726, 40.7080542], [-74.0008051, 40.7086504], [-74.001746, 40.7094405], [-74.0027828, 40.7102375], [-74.0033248, 40.7106612], [-74.0035821, 40.7107851], [-74.004088, 40.7108907], [-74.0043095, 40.7109527], [-74.00447, 40.7110589], [-74.0045186, 40.7112163], [-74.0045185, 40.711325], [-74.00446, 40.711419], [-74.004361, 40.711504], [-74.004105, 40.711576], [-74.003562, 40.7115648], [-74.003413, 40.711748], [-74.003238, 40.711899], [-74.002995, 40.711932], [-74.00284, 40.711914], [-74.002667, 40.711825], [-74.002345, 40.711284], [-74.001872, 40.710758], [-74.001281, 40.710215], [-74.0008344, 40.7097934], [-74.0003579, 40.7094133], [-74.000025, 40.7091151], [-73.9998366, 40.7090121], [-73.9994029, 40.7086882], [-73.9990686, 40.7086934], [-73.9987284, 40.7088711], [-73.9980176, 40.7091881], [-73.9965684, 40.7094158], [-73.9948602, 40.7096797], [-73.993555, 40.7098639], [-73.9905637, 40.7102949], [-73.9888049, 40.7105039], [-73.9870935, 40.7107136], [-73.98473, 40.7109303], [-73.9835571, 40.711014], [-73.9818336, 40.7111312], [-73.9795704, 40.7115565], [-73.9786637, 40.7119992], [-73.9780908, 40.7129085], [-73.9769708, 40.714981], [-73.9760738, 40.7167453], [-73.9757009, 40.717774], [-73.9754617, 40.7189241], [-73.97503, 40.7216137], [-73.9748494, 40.7223692], [-73.974478, 40.7230132], [-73.9737245, 40.7242354], [-73.972791, 40.7255485], [-73.9721949, 40.7270026], [-73.9720612, 40.7280148], [-73.9725413, 40.7295884], [-73.9736504, 40.7304466], [-73.9740008, 40.7309898], [-73.9742118, 40.731718], [-73.9743588, 40.7322374], [-73.974632, 40.7333402], [-73.975198, 40.7355147], [-73.97527, 40.73568], [-73.9753818, 40.7363415], [-73.9751363, 40.7371913], [-73.9743511, 40.738195], [-73.9736623, 40.7391983], [-73.9729701, 40.7424296], [-73.9725173, 40.7432435], [-73.9723624, 40.7434175], [-73.9716105, 40.7447917], [-73.9711545, 40.7453843], [-73.9706289, 40.7459687], [-73.9698745, 40.7467523], [-73.9689683, 40.7476975], [-73.9672742, 40.7499694], [-73.9653882, 40.7519325], [-73.964696, 40.7526127], [-73.9632631, 40.7541473], [-73.9628254, 40.7547841], [-73.9616843, 40.755916], [-73.9611687, 40.7565287], [-73.9592177, 40.7586545]]]
+                            },
+                            properties: {
+                                name: 'NYC Congestion Pricing Zone - Main',
+                                description: 'Manhattan Central Business District'
+                            }
+                        },
+                        {
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Polygon',
+                                coordinates: [[[-73.9586025, 40.7591455], [-73.9625877, 40.7609042], [-73.9626005, 40.7608501], [-73.9625718, 40.7607887], [-73.9625315, 40.7607222], [-73.9624487, 40.7606173], [-73.962315, 40.7605346], [-73.9621527, 40.760457], [-73.962054, 40.760424], [-73.9616516, 40.7602641], [-73.9609789, 40.7599537], [-73.9602754, 40.7596698], [-73.958705, 40.7589866], [-73.9586025, 40.7591455]]]
+                            },
+                            properties: {
+                                name: 'NYC Congestion Pricing Zone - Section 2',
+                                description: 'Additional zone area'
+                            }
+                        }
+                    ]
+                }
+            });
+
+            // ACE enforcement - Heat zones (bottom layer)
+            map.addLayer({
+                id: 'ace-heatmap',
+                type: 'heatmap',
+                source: 'ace-cameras',
+                paint: {
+                    'heatmap-weight': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'tickets_issued'],
+                        3, 0.5,
+                        15, 1,
+                        50, 2,
+                        100, 3
+                    ],
+                    'heatmap-intensity': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        8, 0.6,
+                        12, 1.0,
+                        15, 1.5
+                    ],
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0, 'rgba(0,0,0,0)',
+                        0.2, 'rgba(138,43,226,0.3)',
+                        0.4, 'rgba(147,0,211,0.5)',
+                        0.6, 'rgba(199,21,133,0.6)',
+                        0.8, 'rgba(219,112,147,0.7)',
+                        1, 'rgba(255,20,147,0.8)'
+                    ],
+                    'heatmap-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        8, 8,
+                        12, 12,
+                        15, 16
+                    ],
+                    'heatmap-opacity': 0.65
+                }
+            });
+            
+            // NYC Congestion Zone layer (between heatmaps and routes)
+            map.addLayer({
+                id: 'congestion-zone',
+                type: 'fill',
+                source: 'congestion-zone',
+                paint: {
+                    'fill-color': '#FFD700', // Gold/yellow color
+                    'fill-opacity': 0.2
+                }
+            });
+            
+            // Congestion zone border
+            map.addLayer({
+                id: 'congestion-zone-border',
+                type: 'line',
+                source: 'congestion-zone',
+                paint: {
+                    'line-color': '#FFD700',
+                    'line-width': 2,
+                    'line-opacity': 0.8
+                }
+            });
+            
+            // Bus routes layer (background layer)
+            map.addLayer({
+                id: 'bus-routes',
+                type: 'line',
+                source: 'bus-routes',
+                paint: {
+                    'line-color': [
+                        'case',
+                        ['has', 'route_color'], ['get', 'route_color'],
+                        '#00A8E8' // Default blue
+                    ],
+                    'line-width': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        8, 0.8,
+                        12, 2,
+                        16, 4
+                    ],
+                    'line-opacity': 0.6
+                }
+            });
+            
+            // Bus stops layer
+            map.addLayer({
+                id: 'bus-stops',
+                type: 'circle',
+                source: 'bus-stops',
+                paint: {
+                    'circle-color': '#ffffff',
+                    'circle-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        8, 1,
+                        12, 2,
+                        16, 4
+                    ],
+                    'circle-stroke-width': 1,
+                    'circle-stroke-color': '#2E86AB',
+                    'circle-opacity': 0.8
+                }
+            });
+            
+            // Bus route labels
+            map.addLayer({
+                id: 'bus-route-labels',
+                type: 'symbol',
+                source: 'bus-routes',
+                minzoom: 12,
+                layout: {
+                    'text-field': [
+                        'case',
+                        ['has', 'route_name'], ['get', 'route_name'],
+                        ['has', 'route_short_name'], ['get', 'route_short_name'],
+                        ['get', 'route_id']
+                    ],
+                    'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+                    'text-size': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        12, 10,
+                        16, 14
+                    ],
+                    'symbol-placement': 'line',
+                    'text-rotation-alignment': 'map',
+                    'text-pitch-alignment': 'viewport'
+                },
+                'paint': {
+                    'text-color': '#ffffff',
+                    'text-halo-color': '#000000',
+                    'text-halo-width': 2,
+                    'text-opacity': 0.9
+                }
+            });
+
+            // Crash heatmap layer (top layer - more prominent)
+            map.addLayer({
+                id: 'crashes-heatmap',
+                type: 'heatmap',
+                source: 'crashes',
+                paint: {
+                    'heatmap-weight': [
+                        'case',
+                        ['>', ['get', 'killed'], 0], 3,
+                        ['>', ['get', 'injured'], 0], 2,
+                        1
+                    ],
+                    'heatmap-intensity': 2.0,
+                    'heatmap-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['heatmap-density'],
+                        0, 'rgba(0,0,0,0)',
+                        0.2, 'rgba(65,105,225,0.7)',
+                        0.4, 'rgba(0,191,255,0.8)',
+                        0.6, 'rgba(255,215,0,0.9)',
+                        0.8, 'rgba(255,140,0,0.95)',
+                        1, 'rgba(220,20,60,1.0)'
+                    ],
+                    'heatmap-radius': [
+                        'interpolate',
+                        ['linear'],
+                        ['zoom'],
+                        8, 2,
+                        12, 4,
+                        14, 6,
+                        16, 10
+                    ],
+                    'heatmap-opacity': 0.75
+                }
+            });
+
+
+
+            // Click handlers for interactive analysis
+            
+            // Bus route clicks - just do area analysis (no popup)
+            // Removed bus route popup, now clicking bus routes just does area analysis
+            
+            // Bus stop clicks - analyze area around stop
+            map.on('click', 'bus-stops', function(e) {
+                e.originalEvent.stopPropagation();
+                const properties = e.features[0].properties;
+                const routes = JSON.parse(properties.routes_served || '[]');
+                
+                analyzeArea(e.lngLat, `Bus Stop: ${properties.stop_name}`, {
+                    stop_id: properties.stop_id,
+                    routes_served: routes.slice(0, 5).join(', ') + (routes.length > 5 ? '...' : '')
+                });
+            });
+            
+            // Click anywhere on map for area analysis
+            map.on('click', function(e) {
+                const features = map.queryRenderedFeatures(e.point, {
+                    layers: ['bus-stops']
+                });
+                
+                if (features.length === 0) {
+                    analyzeArea(e.lngLat, 'Area Analysis');
+                }
+            });
+            
+            map.on('mouseenter', 'bus-routes', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'bus-routes', () => {
+                map.getCanvas().style.cursor = '';
+            });
+            
+            map.on('mouseenter', 'bus-stops', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+
+            map.on('mouseleave', 'bus-stops', () => {
+                map.getCanvas().style.cursor = '';
+            });
+        }
+
+        function setupUI() {
+            // Setup slider
+            const slider = document.getElementById('time-slider');
+            if (slider) {
+                slider.max = combinedData.crash_data.unique_months.length - 1;
+                
+                slider.addEventListener('input', (e) => {
+                    currentMonthIndex = parseInt(e.target.value);
+                    updateVisualization();
+                });
+            }
+            
+            // Setup date labels
+            updateSliderDateLabels();
+        }
+        
+        function formatDateToMMYYYY(dateStr) {
+            // Convert "2022-01" to "2022:01"
+            const [year, month] = dateStr.split('-');
+            return `${year}:${month}`;
+        }
+        
+        function updateSliderDateLabels() {
+            if (!combinedData || !combinedData.crash_data.unique_months) return;
+            
+            const months = combinedData.crash_data.unique_months;
+            const endDate = formatDateToMMYYYY(months[months.length - 1]);
+            
+            // Right label shows end date, left label will be updated in updateVisualization
+            document.getElementById('slider-end-date').textContent = endDate;
+        }
+
+        function updateVisualization() {
+            if (!combinedData || !map || !map.getSource('crashes') || !map.getSource('ace-cameras')) {
+                console.log('Waiting for map and data to be ready...');
+                return;
+            }
+            
+            const currentMonth = combinedData.crash_data.unique_months[currentMonthIndex];
+            const currentCrashData = combinedData.crash_data.monthly_data[currentMonth];
+            const currentACEData = combinedData.ace_data.monthly_data[currentMonth] || {type: 'FeatureCollection', features: []};
+            const currentLabel = combinedData.crash_data.month_labels[currentMonthIndex];
+
+            // Update map data
+            map.getSource('crashes').setData(currentCrashData);
+            map.getSource('ace-cameras').setData(currentACEData);
+
+            // Calculate total tickets issued this month
+            const totalTicketsThisMonth = currentACEData.features.reduce((sum, feature) => sum + (feature.properties.tickets_issued || 0), 0);
+            
+            // Update UI
+            document.getElementById('month-display').textContent = currentLabel;
+            document.getElementById('crash-count').textContent = `${currentCrashData.features.length.toLocaleString()} crashes`;
+            document.getElementById('ace-count').textContent = `${totalTicketsThisMonth.toLocaleString()} tickets issued`;
+            document.getElementById('time-slider').value = currentMonthIndex;
+            
+            // Update left date label with current selected date
+            const currentDateFormatted = formatDateToMMYYYY(currentMonth);
+            document.getElementById('slider-start-date').textContent = currentDateFormatted;
+            
+            console.log(`Updated to ${currentLabel}: ${currentCrashData.features.length} crashes, ${totalTicketsThisMonth} ACE tickets`);
+        }
+
+        function toggleCrashes() {
+            showCrashes = !showCrashes;
+            const visibility = showCrashes ? 'visible' : 'none';
+            
+            map.setLayoutProperty('crashes-heatmap', 'visibility', visibility);
+            
+            document.getElementById('crashes-toggle').classList.toggle('active', showCrashes);
+        }
+
+        function toggleACE() {
+            showACE = !showACE;
+            const visibility = showACE ? 'visible' : 'none';
+            
+            map.setLayoutProperty('ace-heatmap', 'visibility', visibility);
+            
+            document.getElementById('ace-toggle').classList.toggle('active', showACE);
+        }
+        
+        function toggleTransit() {
+            showTransit = !showTransit;
+            const visibility = showTransit ? 'visible' : 'none';
+            
+            map.setLayoutProperty('bus-routes', 'visibility', visibility);
+            map.setLayoutProperty('bus-route-labels', 'visibility', visibility);
+            
+            document.getElementById('transit-toggle').classList.toggle('active', showTransit);
+        }
+        
+        function toggleStops() {
+            showStops = !showStops;
+            const visibility = showStops ? 'visible' : 'none';
+            
+            map.setLayoutProperty('bus-stops', 'visibility', visibility);
+            
+            document.getElementById('stops-toggle').classList.toggle('active', showStops);
+        }
+        
+        function toggleCongestionZone() {
+            showCongestionZone = !showCongestionZone;
+            const visibility = showCongestionZone ? 'visible' : 'none';
+            
+            map.setLayoutProperty('congestion-zone', 'visibility', visibility);
+            map.setLayoutProperty('congestion-zone-border', 'visibility', visibility);
+            
+            document.getElementById('congestion-toggle').classList.toggle('active', showCongestionZone);
+        }
+        
+        function toggleACEMode() {
+            aceMode = document.getElementById('ace-mode-toggle').checked;
+            updateRouteColoring();
+        }
+        
+        function updateRouteColoring() {
+            if (!map.getLayer('bus-routes')) return;
+            
+            // List of known ACE-enabled routes (common NYC ACE routes)
+            const aceRoutes = [
+                'M14A', 'M14D', 'M23', 'M34A', 'M42', 'M57', 'M79', 'M86', 'M96', 'M103', 'M116', 'M125',
+                'B44', 'B46', 'B35', 'B15', 'B25', 'B26', 'B41', 'B63', 'B67', 'B68',
+                'BX19', 'BX35', 'BX41', 'BX6', 'BX15', 'BX36', 'BX46',
+                'Q44', 'Q58', 'Q32', 'Q53', 'Q101', 'Q102', 'Q103'
+            ];
+            
+            if (aceMode) {
+                // ACE Mode: ACE routes red, others blue
+                map.setPaintProperty('bus-routes', 'line-color', [
+                    'case',
+                    ['in', ['get', 'route_name'], ['literal', aceRoutes]], 
+                    '#FF6B6B', // Red for ACE routes
+                    '#0066CC'  // Blue for non-ACE routes
+                ]);
+            } else {
+                // Regular Mode: Each route has its own color (or default)
+                map.setPaintProperty('bus-routes', 'line-color', [
+                    'case',
+                    ['has', 'route_color'], ['get', 'route_color'],
+                    '#00A8E8' // Default blue
+                ]);
+            }
+        }
+        
+        // Story navigation functionality
+        let currentSectionIndex = 0;
+        let sections = [];
+        let isScrolling = false;
+        
+        function initStoryNavigation() {
+            sections = document.querySelectorAll('.chart-section');
+            const storyDisplay = document.getElementById('story-display');
+            
+            // Create progress dots
+            createProgressDots();
+            
+            // Add scroll snap behavior
+            storyDisplay.addEventListener('scroll', function() {
+                if (!isScrolling) {
+                    updateActiveSection();
+                }
+            });
+            
+            // Add wheel event for manual control
+            storyDisplay.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                
+                if (isScrolling) return;
+                
+                if (e.deltaY > 0) {
+                    // Scroll down - next section
+                    showNextSection();
+                } else {
+                    // Scroll up - previous section
+                    showPreviousSection();
+                }
+            });
+        }
+        
+        function createProgressDots() {
+            const progressContainer = document.getElementById('progress-dots');
+            progressContainer.innerHTML = '';
+            
+            sections.forEach((section, index) => {
+                const dot = document.createElement('div');
+                dot.className = `progress-dot ${index === 0 ? 'active' : ''}`;
+                dot.addEventListener('click', () => showSection(index));
+                progressContainer.appendChild(dot);
+            });
+        }
+        
+        function updateActiveSection() {
+            const storyDisplay = document.getElementById('story-display');
+            const scrollTop = storyDisplay.scrollTop;
+            const sectionHeight = storyDisplay.clientHeight;
+            const newIndex = Math.round(scrollTop / sectionHeight);
+            
+            if (newIndex !== currentSectionIndex && newIndex >= 0 && newIndex < sections.length) {
+                setActiveSection(newIndex);
+            }
+        }
+        
+        function showSection(index) {
+            if (index < 0 || index >= sections.length) return;
+            
+            isScrolling = true;
+            const storyDisplay = document.getElementById('story-display');
+            const targetScroll = index * storyDisplay.clientHeight;
+            
+            storyDisplay.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+            
+            setTimeout(() => {
+                isScrolling = false;
+                setActiveSection(index);
+            }, 500);
+        }
+        
+        function setActiveSection(index) {
+            // Remove active class from all sections
+            sections.forEach(section => section.classList.remove('active'));
+            
+            // Add active class to current section
+            sections[index].classList.add('active');
+            
+            // Update progress dots
+            const dots = document.querySelectorAll('.progress-dot');
+            dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+            
+            // Update counter
+            document.getElementById('section-counter').textContent = `${index + 1} / ${sections.length}`;
+            
+            currentSectionIndex = index;
+        }
+        
+        function showNextSection() {
+            const nextIndex = Math.min(currentSectionIndex + 1, sections.length - 1);
+            showSection(nextIndex);
+        }
+        
+        function showPreviousSection() {
+            const prevIndex = Math.max(currentSectionIndex - 1, 0);
+            showSection(prevIndex);
+        }
+        
+        function showAllData() {
+            if (isPlaying) {
+                stopAnimation();
+            }
+            
+            // Show all months data
+            const allCrashFeatures = [];
+            const allAceFeatures = [];
+            
+            combinedData.crash_data.unique_months.forEach(month => {
+                if (combinedData.crash_data.monthly_data[month]) {
+                    allCrashFeatures.push(...combinedData.crash_data.monthly_data[month].features);
+                }
+                if (combinedData.ace_data.monthly_data[month]) {
+                    allAceFeatures.push(...combinedData.ace_data.monthly_data[month].features);
+                }
+            });
+            
+            // Update map sources
+            map.getSource('crashes').setData({
+                type: 'FeatureCollection',
+                features: allCrashFeatures
+            });
+            
+            map.getSource('ace-cameras').setData({
+                type: 'FeatureCollection', 
+                features: allAceFeatures
+            });
+            
+            // Calculate total tickets
+            const totalTickets = allAceFeatures.reduce((sum, f) => sum + (f.properties.tickets_issued || 0), 0);
+            
+            // Update UI
+            document.getElementById('month-display').textContent = 'All Months';
+            document.getElementById('crash-count').textContent = `${allCrashFeatures.length.toLocaleString()} crashes`;
+            document.getElementById('ace-count').textContent = `${totalTickets.toLocaleString()} tickets issued`;
+            document.getElementById('time-slider').value = combinedData.crash_data.unique_months.length - 1;
+            
+            currentMonthIndex = combinedData.crash_data.unique_months.length - 1;
+        }
+        
+        function analyzeArea(lngLat, title, additionalInfo = {}) {
+            const radius = 150; // 150 meters
+            const lat = lngLat.lat;
+            const lng = lngLat.lng;
+            
+            // Get current data based on time slider
+            let crashFeatures, aceFeatures;
+            
+            if (currentMonthIndex >= combinedData.crash_data.unique_months.length - 1 || document.getElementById('month-display').textContent === 'All Months') {
+                // Show all data
+                crashFeatures = [];
+                aceFeatures = [];
+                combinedData.crash_data.unique_months.forEach(month => {
+                    if (combinedData.crash_data.monthly_data[month]) {
+                        crashFeatures.push(...combinedData.crash_data.monthly_data[month].features);
+                    }
+                    if (combinedData.ace_data.monthly_data[month]) {
+                        aceFeatures.push(...combinedData.ace_data.monthly_data[month].features);
+                    }
+                });
+            } else {
+                // Show current month data
+                const month = combinedData.crash_data.unique_months[currentMonthIndex];
+                crashFeatures = combinedData.crash_data.monthly_data[month] ? combinedData.crash_data.monthly_data[month].features : [];
+                aceFeatures = combinedData.ace_data.monthly_data[month] ? combinedData.ace_data.monthly_data[month].features : [];
+            }
+            
+            // Find nearby crashes
+            const nearbyCrashes = crashFeatures.filter(feature => {
+                const crashLng = feature.geometry.coordinates[0];
+                const crashLat = feature.geometry.coordinates[1];
+                const distance = getDistance(lat, lng, crashLat, crashLng);
+                return distance <= radius;
+            });
+            
+            // Find nearby ACE violations
+            const nearbyACE = aceFeatures.filter(feature => {
+                const aceLng = feature.geometry.coordinates[0];
+                const aceLat = feature.geometry.coordinates[1];
+                const distance = getDistance(lat, lng, aceLat, aceLng);
+                return distance <= radius;
+            });
+            
+            // Calculate statistics
+            const totalCrashes = nearbyCrashes.length;
+            const totalInjured = nearbyCrashes.reduce((sum, f) => sum + (f.properties.injured || 0), 0);
+            const totalKilled = nearbyCrashes.reduce((sum, f) => sum + (f.properties.killed || 0), 0);
+            const totalACETickets = nearbyACE.reduce((sum, f) => sum + (f.properties.tickets_issued || 0), 0);
+            
+            // Find nearby bus routes
+            const nearbyRoutes = transitData.bus_routes.features.filter(feature => {
+                return feature.geometry.coordinates.some(coord => {
+                    const distance = getDistance(lat, lng, coord[1], coord[0]);
+                    return distance <= radius;
+                });
+            });
+            
+            const uniqueRoutes = [...new Set(nearbyRoutes.map(r => r.properties.route_name))].slice(0, 5);
+            
+            // Create popup content
+            let popupContent = `
+                <div style="max-width: 300px;">
+                    <strong>${title || 'Area Analysis'}</strong><br>
+                    <em>Within ${radius}m radius</em><br><br>
+            `;
+            
+            if (Object.keys(additionalInfo).length > 0) {
+                if (additionalInfo.stop_id) {
+                    popupContent += `<strong>Stop ID:</strong> ${additionalInfo.stop_id}<br>`;
+                }
+                if (additionalInfo.routes_served) {
+                    popupContent += `<strong>Routes:</strong> ${additionalInfo.routes_served}<br><br>`;
+                }
+            }
+            
+            popupContent += `
+                <div style="background: #2a2a2a; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                    <strong>Crashes:</strong> ${totalCrashes}<br>
+                    <span style="color: #ff6b6b;">Injured:</span> ${totalInjured}<br>
+                    <span style="color: #ff0000;">Killed:</span> ${totalKilled}
+                </div>
+                
+                <div style="background: #4a2a4a; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                    <strong>ACE Enforcement:</strong><br>
+                    <span style="color: #8A2BE2;">Tickets:</span> ${totalACETickets}
+                </div>
+                
+                <div style="background: #2a4a2a; padding: 10px; border-radius: 5px; margin: 5px 0;">
+                    <strong>Nearby Routes:</strong><br>
+                    ${uniqueRoutes.length > 0 ? uniqueRoutes.join(', ') : 'None nearby'}
+                </div>
+                
+                <div style="font-size: 10px; color: #888; margin-top: 10px;">
+                    ${document.getElementById('month-display').textContent.includes('All') ? 'All time data' : `Data for: ${document.getElementById('month-display').textContent}`}
+                </div>
+                </div>
+            `;
+            
+            new mapboxgl.Popup({ maxWidth: '350px' })
+                .setLngLat(lngLat)
+                .setHTML(popupContent)
+                .addTo(map);
+        }
+        
+        function getDistance(lat1, lng1, lat2, lng2) {
+            // Haversine formula to calculate distance in meters
+            const R = 6371000; // Earth's radius in meters
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLng/2) * Math.sin(dLng/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+
+        function previousMonth() {
+            if (!combinedData || !combinedData.crash_data.unique_months.length) return;
+            
+            if (isPlaying) {
+                stopAnimation();
+            }
+            
+            currentMonthIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : combinedData.crash_data.unique_months.length - 1;
+            updateVisualization();
+        }
+        
+        function nextMonth() {
+            if (!combinedData || !combinedData.crash_data.unique_months.length) return;
+            
+            if (isPlaying) {
+                stopAnimation();
+            }
+            
+            currentMonthIndex = (currentMonthIndex + 1) % combinedData.crash_data.unique_months.length;
+            updateVisualization();
+        }
+        
+        function toggleAnimation() {
+            if (isPlaying) {
+                stopAnimation();
+            } else {
+                startAnimation();
+            }
+        }
+
+        function startAnimation() {
+            isPlaying = true;
+            document.getElementById('play-button').setAttribute('data-symbol', '⏸');
+            
+            animationId = setInterval(() => {
+                currentMonthIndex = (currentMonthIndex + 1) % combinedData.crash_data.unique_months.length;
+                updateVisualization();
+                
+                // Stop at the end if we've looped
+                if (currentMonthIndex === 0) {
+                    stopAnimation();
+                }
+            }, 600); // 600ms between months for better ACE visibility
+        }
+
+        function stopAnimation() {
+            isPlaying = false;
+            document.getElementById('play-button').setAttribute('data-symbol', '▶');
+            
+            if (animationId) {
+                clearInterval(animationId);
+                animationId = null;
+            }
+        }
+
+        // Initialize the application when the page loads
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+</body>
+</html>

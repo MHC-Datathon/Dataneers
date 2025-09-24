@@ -1,4 +1,4 @@
-*.zip filter=lfs diff=lfs merge=lfs -text
-enhanced_map.html filter=lfs diff=lfs merge=lfs -text
-config.json filter=lfs diff=lfs merge=lfs -text
-enhanced_ace_crash_data.json filter=lfs diff=lfs merge=lfs -text
+# Only track old backup files in LFS - keep GitHub Pages files as regular Git files
+OLD_backup_purposes/*.zip filter=lfs diff=lfs merge=lfs -text
+OLD_backup_purposes/*.json filter=lfs diff=lfs merge=lfs -text
+OLD_backup_purposes/*.html filter=lfs diff=lfs merge=lfs -text

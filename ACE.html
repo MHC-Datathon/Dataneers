@@ -39,6 +39,7 @@
             flex-direction: column;
             border-top: 1px solid #282828;
         }
+        
 
         .unified-panel h3 {
             margin: 0;
@@ -102,17 +103,42 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 12px 24px 8px 24px;
+            padding: 12px 16px 8px clamp(100px, 7vw, 120px);
             flex-grow: 1;
+        }
+        
+        /* Move just the date and info section down */
+        .temporal-section > div:first-child {
+            align-self: flex-end;
+            margin-top: 15px;
         }
         
         .slider-container {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 0px 24px 2px 24px;
+            padding: 0px 16px 2px 16px;
             margin-top: -12px;
-            gap: 6px;
+            gap: 4px;
+            position: relative;
+        }
+        
+        .smooth-progress-overlay {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: clamp(300px, 28vw, 450px);
+            height: 4px;
+            background: linear-gradient(to right, #1db954 0%, #1db954 var(--progress, 0%), transparent var(--progress, 0%));
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 1;
+            transition: --progress 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            opacity: 0;
+        }
+        
+        .smooth-progress-overlay.active {
+            opacity: 1;
         }
         
         .slider-date-label {
@@ -125,7 +151,7 @@
         }
         
         .time-slider {
-            width: 400px;
+            width: clamp(300px, 28vw, 450px);
             height: 4px;
             border-radius: 2px;
             background: #4f4f4f;
@@ -133,6 +159,11 @@
             -webkit-appearance: none;
             cursor: pointer;
             transition: background 0.2s ease;
+            position: relative;
+        }
+        
+        .time-slider.smooth {
+            transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         .time-slider:hover {
@@ -199,7 +230,7 @@
             text-transform: capitalize;
         }
         
-        button:hover {
+        .toggle-buttons button:hover {
             background: #3e3e3e;
             color: #ffffff;
             transform: scale(1.02);
@@ -211,20 +242,40 @@
             font-weight: 600;
         }
         
-        button.active:hover {
+        .toggle-buttons button.active:hover {
             background: #1ed760;
             transform: scale(1.02);
         }
         
         .play-controls {
-            display: flex;
-            gap: 8px;
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
             align-items: center;
-            justify-content: center;
             position: absolute;
             left: 50%;
             top: 10px;
             transform: translateX(-50%);
+            width: 280px;
+        }
+        
+        .left-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .center-control {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .right-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-start;
+            align-items: center;
         }
         
         .nav-button {
@@ -244,6 +295,7 @@
         }
         
         
+        
         .nav-button.prev {
             background-image: url('Image_Sources/spotprev.png');
         }
@@ -252,9 +304,38 @@
             background-image: url('Image_Sources/spotnext.png');
         }
         
+        .nav-button.loop {
+            background-image: url('Image_Sources/loop.png');
+        }
+        
+        .nav-button.speed {
+            background: transparent;
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 600;
+            filter: brightness(0) invert(1) opacity(0.6);
+        }
+        
+        .nav-button.speed:hover {
+            filter: brightness(0) invert(1) opacity(1);
+        }
+        
+        /* Loop button styling handled by JavaScript */
         
         .nav-button:hover {
-            filter: brightness(1) invert(0) opacity(1);
+            transform: scale(1.1);
+        }
+        
+        .play-button:hover {
+            transform: scale(1.1);
+        }
+        
+        #loop-button.active {
+            filter: none !important;
+        }
+        
+        #loop-button.active:hover {
+            filter: none !important;
         }
         
         .nav-button:focus {
@@ -323,6 +404,123 @@
             transform: translateX(18px);
         }
         
+        /* Triple Route Mode Slider */
+        .triple-route-slider {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .route-mode-container {
+            position: relative;
+            width: 60px;
+            height: 16px;
+            background: #4a4a4a;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .route-mode-indicator {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 12px;
+            background: #ffffff;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .route-mode-container.mode-0 .route-mode-indicator {
+            left: 2px;
+            background: #ffffff; /* Keep white instead of blue */
+        }
+        
+        .route-mode-container.mode-1 .route-mode-indicator {
+            left: 21px;
+            background: #ffffff; /* Keep white instead of green */
+        }
+        
+        .route-mode-container.mode-2 .route-mode-indicator {
+            left: 40px;
+            background: #ffffff; /* Keep white instead of red */
+        }
+        
+        .route-mode-label {
+            font-size: 8px;
+            color: #b3b3b3;
+            white-space: nowrap;
+        }
+        
+        /* Opacity Slider Styles */
+        .opacity-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            align-self: flex-start;
+        }
+        
+        .opacity-control label {
+            font-size: 10px;
+            color: #ffffff;
+            font-weight: 600;
+            white-space: nowrap;
+            min-width: 50px;
+        }
+        
+        .opacity-slider {
+            width: 80px;
+            height: 3px;
+            border-radius: 2px;
+            background: #4f4f4f;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .opacity-slider:hover {
+            background: #535353;
+        }
+        
+        .opacity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .opacity-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            background: #1db954;
+        }
+        
+        .opacity-slider::-moz-range-thumb {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffffff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .opacity-value {
+            font-size: 9px;
+            color: #b3b3b3;
+            min-width: 25px;
+            text-align: right;
+        }
+        
         .play-button {
             background: #ffffff;
             border: none;
@@ -344,6 +542,7 @@
             text-align: center;
             position: relative;
         }
+        
         
         .play-button::after {
             content: attr(data-symbol);
@@ -397,6 +596,7 @@
             display: flex;
             align-items: center;
             white-space: nowrap;
+            gap: 8px;
         }
 
         .legend-color {
@@ -407,17 +607,19 @@
             border: 1px solid #fff;
         }
         
-        /* Left sidebar for charts - full-page scroll style */
+        /* Left sidebar for charts - responsive layout */
         .charts-sidebar {
             position: absolute;
             top: 50%;
             left: 20px;
             transform: translateY(-50%);
-            width: 420px;
-            height: 80vh;
-            max-height: 700px;
+            width: 35vw;
+            max-width: 650px;
+            min-width: 320px;
+            height: 70vh;
+            max-height: 550px;
             background: linear-gradient(180deg, #181818 0%, #121212 100%);
-            border-radius: 12px;
+            border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.8);
             z-index: 1000;
             border: 1px solid #282828;
@@ -425,6 +627,7 @@
             display: flex;
             flex-direction: column;
             scroll-behavior: smooth;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         
         .charts-header {
@@ -463,45 +666,48 @@
         }
         
         .chart-section {
-            height: 100%;
-            scroll-snap-align: start;
+            height: 100%; /* Fill the chart-display container height */
+            scroll-snap-align: start; /* Back to start alignment for precise snapping */
             scroll-snap-stop: always;
             display: flex;
             flex-direction: column;
-            padding: 15px;
+            padding: 8px; /* Reduced from 15px */
             position: relative;
             align-items: stretch;
             text-align: left;
+            overflow: hidden; /* Prevent content from other slides showing */
+            box-sizing: border-box; /* Include padding in height calculation */
         }
+        
         
         .chart-title {
             color: #fff;
-            font-size: 20px;
+            font-size: 18px; /* Smaller font */
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 6px; /* Match paragraph spacing */
             text-align: center;
-            min-height: 50px;
+            height: 30px; /* Reduced height */
             display: flex;
             align-items: center;
             justify-content: center;
         }
         
         .chart-container {
-            flex: 1;
+            flex: none; /* Don't expand to fill space */
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            min-height: 350px;
+            height: 220px; /* Reduced from 280px */
+            margin: 6px 0; /* Match paragraph spacing */
         }
         
         .chart-image {
-            width: 95%;
+            width: 90%;
             height: auto;
-            max-height: 90%;
-            min-height: 300px;
-            border-radius: 8px;
-            border: 1px solid #555;
+            max-height: 260px; /* Fixed max height */
+            border-radius: 12px; /* More rounded corners */
+            border: none; /* Remove image borders */
             object-fit: contain;
             transition: transform 0.3s ease, opacity 0.3s ease;
             background: transparent;
@@ -554,12 +760,51 @@
         /* Story content styling */
         .story-content {
             color: #b3b3b3;
-            line-height: 1.7;
-            font-size: 16px;
+            line-height: 1.4; /* Tighter line height */
+            font-size: 14px; /* Smaller font */
+            padding: 6px 30px; /* Much more horizontal padding to avoid edge hugging */
         }
         
         .story-content p {
-            margin-bottom: 14px;
+            margin-bottom: 6px; /* Further reduced for ultra-compact layout */
+        }
+        
+        /* Tighter spacing when story content comes before chart */
+        .story-content + .chart-container {
+            margin-top: -5px; /* Negative margin to pull chart closer */
+        }
+        
+        /* Remove bottom padding from story content when followed by chart */
+        .has-chart .story-content {
+            padding-bottom: 0px; /* Remove bottom padding for tighter spacing */
+        }
+        
+        /* Remove margin from last element in story content for even tighter spacing */
+        .story-content p:last-child,
+        .story-content div:last-child {
+            margin-bottom: 0px;
+        }
+        
+        /* Better spacing for chart slides 5-8 */
+        .chart-section[data-section="5"] .chart-container,
+        .chart-section[data-section="6"] .chart-container,
+        .chart-section[data-section="7"] .chart-container,
+        .chart-section[data-section="8"] .chart-container {
+            margin: 12px 0; /* Increased from 6px for more breathing room */
+        }
+        
+        .chart-section[data-section="5"] .chart-title,
+        .chart-section[data-section="6"] .chart-title,
+        .chart-section[data-section="7"] .chart-title,
+        .chart-section[data-section="8"] .chart-title {
+            margin-bottom: 10px; /* Increased from 6px */
+        }
+        
+        .chart-section[data-section="5"] .story-content,
+        .chart-section[data-section="6"] .story-content,
+        .chart-section[data-section="7"] .story-content,
+        .chart-section[data-section="8"] .story-content {
+            padding: 10px 30px; /* Much more horizontal padding to avoid edge hugging */
         }
         
         .story-content strong {
@@ -656,6 +901,185 @@
             border-radius: 3px;
         }
         
+        /* Smaller text for sections 11-13 to fit charts better */
+        .chart-section[data-section="11"] .story-content,
+        .chart-section[data-section="12"] .story-content,
+        .chart-section[data-section="13"] .story-content {
+            font-size: 12px;
+            line-height: 1.3;
+            padding: 4px 25px;
+        }
+        
+        .chart-section[data-section="11"] .story-content p,
+        .chart-section[data-section="12"] .story-content p,
+        .chart-section[data-section="13"] .story-content p {
+            margin-bottom: 4px;
+        }
+        
+        .chart-section[data-section="11"] .data-highlight,
+        .chart-section[data-section="12"] .data-highlight,
+        .chart-section[data-section="13"] .data-highlight {
+            padding: 6px 10px;
+            margin: 6px 0;
+        }
+        
+        /* Add more space between title and content for slide 9 */
+        .chart-section[data-section="9"] .story-content {
+            margin-top: 15px;
+            padding: 10px 30px;
+        }
+        
+        .chart-section[data-section="9"] .chart-container {
+            margin-top: 15px;
+        }
+        
+        /* Increase image size and position lower for slide 12 */
+        .chart-section[data-section="12"] .chart-image {
+            width: 85%;
+            max-height: 220px;
+        }
+        
+        .chart-section[data-section="12"] .chart-container {
+            height: 250px;
+            margin-top: 20px;
+            align-items: flex-end;
+        }
+        
+        /* Shrink image size for slide 13 to prevent covering text */
+        .chart-section[data-section="13"] .chart-image {
+            width: 70%;
+            max-height: 180px;
+        }
+        
+        .chart-section[data-section="13"] .chart-container {
+            height: 200px;
+        }
+        
+        /* Increase image size and position lower for slide 14 */
+        .chart-section[data-section="14"] .chart-image {
+            width: 85%;
+            max-height: 220px;
+        }
+        
+        .chart-section[data-section="14"] .chart-container {
+            height: 250px;
+            margin-top: 20px;
+            align-items: flex-end;
+        }
+        
+        /* Position image closer to bottom and center for slide 11 */
+        .chart-section[data-section="11"] .chart-container {
+            margin-top: 15px;
+            align-items: center;
+            justify-content: center;
+            height: auto;
+            min-height: 150px;
+        }
+        
+        .chart-section[data-section="11"] .chart-image {
+            margin-top: 10px;
+        }
+        
+        /* Make Top 20 violators image bigger and centered for slide 8 */
+        .chart-section[data-section="8"] .chart-container {
+            height: 350px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .chart-section[data-section="8"] .chart-image {
+            width: 95%;
+            max-height: 320px;
+            object-fit: contain;
+        }
+        
+        /* Increase picture size and center for slide 13 */
+        .chart-section[data-section="13"] .chart-container {
+            height: 280px;
+            margin-top: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-section[data-section="13"] .chart-image {
+            width: 90%;
+            max-height: 250px;
+            object-fit: contain;
+        }
+        
+        /* Reduce text size and ensure image fits for slide 14 */
+        .chart-section[data-section="14"] .story-content {
+            font-size: 12px;
+            line-height: 1.3;
+            padding: 4px 25px;
+        }
+        
+        .chart-section[data-section="14"] .story-content p {
+            margin-bottom: 4px;
+        }
+        
+        .chart-section[data-section="14"] .data-highlight {
+            padding: 6px 10px;
+            margin: 6px 0;
+            font-size: 11px;
+        }
+        
+        .chart-section[data-section="14"] .chart-image {
+            width: 80%;
+            max-height: 200px;
+            object-fit: contain;
+        }
+        
+        .chart-section[data-section="14"] .chart-container {
+            height: 240px;
+            margin-top: 15px;
+            align-items: flex-start;
+        }
+        
+        /* Reduce text size and image size for slide 15 */
+        .chart-section[data-section="15"] .story-content {
+            font-size: 12px;
+            line-height: 1.3;
+            padding: 4px 25px;
+        }
+        
+        .chart-section[data-section="15"] .story-content p {
+            margin-bottom: 4px;
+        }
+        
+        .chart-section[data-section="15"] .data-highlight {
+            padding: 6px 10px;
+            margin: 6px 0;
+            font-size: 11px;
+        }
+        
+        .chart-section[data-section="15"] .chart-image {
+            width: 85%;
+            max-height: 220px;
+            object-fit: contain;
+        }
+        
+        .chart-section[data-section="15"] .chart-container {
+            height: 250px;
+            margin-top: 15px;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Increase text size for slide 16 */
+        .chart-section[data-section="16"] .story-content {
+            font-size: 16px;
+            line-height: 1.5;
+            padding: 8px 30px;
+        }
+        
+        .chart-section[data-section="16"] .story-content p {
+            margin-bottom: 8px;
+        }
+        
         .scroll-hint {
             text-align: center;
             margin-top: 20px;
@@ -695,17 +1119,141 @@
             border-left-color: rgba(0,0,0,0.7) !important;
             border-right-color: rgba(0,0,0,0.7) !important;
         }
+        
+        /* Album cover style GIF in bottom left */
+        .album-cover {
+            position: fixed;
+            bottom: 5px;
+            left: 15px;
+            width: 90px;
+            height: 90px;
+            border-radius: 8px;
+            z-index: 1500;
+            transition: transform 0.3s ease, opacity 0.5s ease;
+            opacity: 0;
+            display: none;
+        }
+        
+        .album-cover:hover {
+            transform: scale(1.05);
+        }
+        
+        .album-cover img {
+            width: 100%;
+            height: 100%;
+            border-radius: 6px;
+            object-fit: cover;
+            border: none;
+        }
+        
+        .album-cover.show {
+            opacity: 1;
+            display: block;
+        }
+        
+        /* Analysis toggle button - same size as prev/next buttons */
+        .nav-button.analysis-toggle {
+            width: 67px;
+            height: 67px;
+            background-size: 30px 30px;
+            margin-right: -15px; /* Close gap to previous button - 15px apart */
+        }
+        
+        /* Override default gray filter only when showing enabled icon */
+        .nav-button.analysis-toggle[style*="analysis_enabled.png"] {
+            filter: none !important;
+        }
+        
+        /* Force analysis toggle button size with higher specificity */
+        button.nav-button.analysis-toggle {
+            width: 67px !important;
+            height: 67px !important;
+            background-size: 30px 30px !important;
+        }
+        
+        /* Loop button - almost as big as prev/next buttons */
+        .nav-button.loop {
+            width: 60px;
+            height: 60px;
+            background-size: 28px 28px;
+            margin-right: -20px; /* Bring loop button closer to speed button */
+            margin-left: -5px; /* Move 5px to the left */
+        }
+        
+        /* Speed button - same size as prev/next buttons */
+        .nav-button.speed {
+            width: 67px;
+            height: 67px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-left: -5px; /* Move 5px to the left */
+        }
+        
+        /* Increase previous and next button sizes to 140% of play button (67px) */
+        .nav-button.prev,
+        .nav-button.next {
+            width: 67px;
+            height: 67px;
+            background-size: 30px 30px; /* Scale icon proportionally */
+        }
+        
+        /* Floating legend in bottom right */
+        .floating-legend {
+            position: fixed;
+            bottom: 110px;
+            right: 20px;
+            background: rgba(24, 24, 24, 0.9);
+            border: 1px solid #282828;
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 1500;
+            backdrop-filter: blur(10px);
+        }
+        
+        
     </style>
 </head>
 <body>
     <div id='map'></div>
     <div id="loading" class="loading">Loading crash and ACE data...</div>
     
+    <!-- Album Cover GIF -->
+    <div class="album-cover">
+        <img src="Image_Sources/DISC.gif" alt="Animated disc">
+    </div>
+    
+    <!-- Floating Legend -->
+    <div class="floating-legend">
+        <div class="legend-item">
+            <div style="background: linear-gradient(90deg, #4169e1, #ffd700, #dc143c); width: 20px; height: 4px; border-radius: 2px;"></div>
+            <span style="color: #b3b3b3; font-size: 9px;">Crashes</span>
+        </div>
+        <div class="legend-item">
+            <div style="background: linear-gradient(90deg, #8a2be2, #ff1493); width: 20px; height: 4px; border-radius: 2px;"></div>
+            <span style="color: #b3b3b3; font-size: 9px;">ACE</span>
+        </div>
+        <div class="legend-item">
+            <div style="background: #FFD700; width: 10px; height: 10px; border-radius: 2px; opacity: 0.8;"></div>
+            <span style="color: #b3b3b3; font-size: 9px;">Congestion Zone</span>
+        </div>
+        <div class="legend-item">
+            <div style="background: #FF6B6B; width: 16px; height: 3px; border-radius: 1px;"></div>
+            <span style="color: #b3b3b3; font-size: 9px;">ACE Routes</span>
+        </div>
+        <div class="legend-item">
+            <div style="background: #0066CC; width: 16px; height: 3px; border-radius: 1px;"></div>
+            <span style="color: #b3b3b3; font-size: 9px;">Non-ACE Routes</span>
+        </div>
+    </div>
+    
     <!-- Story Sidebar -->
     <div class="charts-sidebar" id="story-sidebar">
         <div class="charts-header">
             <h3><img src="Image_Sources/MTA_NYC_logo.svg.png" alt="MTA Logo" style="height: 20px; width: auto; margin-right: 8px; vertical-align: middle;">NYC Bus ACE Analysis</h3>
-            <div class="chart-counter" id="section-counter">1 / 12</div>
+            <div class="chart-counter" id="section-counter">1 / 18</div>
         </div>
         <div class="chart-display" id="story-display">
             <!-- Section 1: Introduction -->
@@ -756,7 +1304,7 @@
             </div>
             
             <!-- Section 4: Basic ACE Data -->
-            <div class="chart-section" data-section="4">
+            <div class="chart-section has-chart" data-section="4">
                 <div class="chart-title">Basic ACE Statistics</div>
                 <div class="story-content">
                     <div class="data-highlight">
@@ -765,13 +1313,16 @@
                     <p>The median and mode is 1 ticket per vehicle, but the mean is 2.26 - indicating a <strong>small group of repeat offenders</strong> driving up the average.</p>
                     <p>Emergency vehicles and Paratransit have significantly higher averages (13.3 and 7.7 tickets respectively), suggesting <strong>structural issues</strong> in city space allocation.</p>
                 </div>
+                <div class="chart-container">
+                    <img src="Data_Tables/BasicAceData.jpg" alt="Basic ACE Statistics" class="chart-image">
+                </div>
             </div>
             
             <!-- Section 5: Vehicle Distribution Chart -->
-            <div class="chart-section" data-section="5">
+            <div class="chart-section has-chart" data-section="5">
                 <div class="chart-title">Vehicle Ticket Distribution</div>
                 <div class="chart-container">
-                    <img src="Data_Charts/Percent of Vechiles recieving # of tickets.png" alt="Vehicle Ticket Distribution" class="chart-image">
+                    <img src="Data_Tables/PercentofVechiles recievingof tickets.png" alt="Vehicle Ticket Distribution" class="chart-image">
                 </div>
                 <div class="story-content">
                     <p><strong>60.1%</strong> of vehicles received only one ticket</p>
@@ -781,10 +1332,10 @@
             </div>
             
             <!-- Section 6: Violations Distribution -->
-            <div class="chart-section" data-section="6">
+            <div class="chart-section has-chart" data-section="6">
                 <div class="chart-title">Ticket Distribution Analysis</div>
                 <div class="chart-container">
-                    <img src="Data_Charts/Recidivism Violation.png" alt="Recidivism Violations" class="chart-image">
+                    <img src="Data_Tables/Recidivism Violation.png" alt="Recidivism Violations" class="chart-image">
                 </div>
                 <div class="story-content">
                     <div class="data-highlight">
@@ -795,10 +1346,10 @@
             </div>
             
             <!-- Section 7: Exempt Violations -->
-            <div class="chart-section" data-section="7">
+            <div class="chart-section has-chart" data-section="7">
                 <div class="chart-title">Exempt Vehicle Analysis</div>
                 <div class="chart-container">
-                    <img src="Data_Charts/Recidivism Exempt.png" alt="Exempt Recidivism" class="chart-image">
+                    <img src="Data_Tables/Recidivism Exempt.png" alt="Exempt Recidivism" class="chart-image">
                 </div>
                 <div class="story-content">
                     <div class="data-highlight">
@@ -808,11 +1359,19 @@
                 </div>
             </div>
             
-            <!-- Section 8: Monthly Trends -->
-            <div class="chart-section" data-section="8">
+            <!-- Section 8: Top Violators -->
+            <div class="chart-section has-chart" data-section="8">
+                <div class="chart-title">Top 20 Violators</div>
+                <div class="chart-container">
+                    <img src="Data_Tables/Top 20 violators.png" alt="Top 20 Violators" class="chart-image">
+                </div>
+            </div>
+            
+            <!-- Section 9: Monthly Trends -->
+            <div class="chart-section has-chart" data-section="9">
                 <div class="chart-title">Violations by Route & Month</div>
                 <div class="chart-container">
-                    <img src="Data_Charts/Violations Issued of Select Charts.png" alt="Monthly Violations" class="chart-image">
+                    <img src="Data_Tables/Violations Issued of Select Charts.png" alt="Monthly Violations" class="chart-image">
                 </div>
                 <div class="story-content">
                     <p><strong>Pattern observed:</strong> Spike in tickets May-September 2024 (ABLE to ACE transition) and March-April 2025 (ACE expansion).</p>
@@ -820,55 +1379,121 @@
                 </div>
             </div>
             
-            <!-- Section 9: Solutions -->
-            <div class="chart-section" data-section="9">
-                <div class="chart-title">Proposed Solutions</div>
+            <!-- Section 10: Exempt Vehicle Patterns -->
+            <div class="chart-section has-chart" data-section="10">
+                <div class="chart-title">Exempt Vehicle Patterns</div>
+                <div class="chart-container">
+                    <img src="Data_Tables/Exempt of Select Chart.png" alt="Exempt Vehicle Violations by Route" class="chart-image">
+                </div>
                 <div class="story-content">
-                    <p>Similar to "super speeders" in camera enforcement, we propose:</p>
+                    <p>The exempt data is similar in its spikes but not in the trough. This is likely because they are (rightfully) not punished for violations and further confirms a structural issue.</p>
+                </div>
+            </div>
+            
+            <!-- Section 11: Super Parker Pattern & Solutions -->
+            <div class="chart-section" data-section="11">
+                <div class="chart-title">Super Parker Pattern & Solutions</div>
+                <div class="story-content">
+                    <p>These results are similar to speed camera data. There is a small portion of <strong>"super speeders"</strong> that contribute a disproportionate number of violations. We can look to proposed speeding solutions and apply them here.</p>
                     <div class="solutions-list">
                         <div class="solution-item">
-                            <strong>1. Harsher Fines</strong>
-                            <p>Raise the $250 cap and partner with NYPD for unpaid ticket enforcement.</p>
+                            <strong>1. Harsher Fines:</strong> Raise $250 cap and partner with NYPD on unpaid tickets.
                         </div>
                         <div class="solution-item">
-                            <strong>2. State Legislation</strong>
-                            <p>Adopt "super parker" bill similar to proposed "super speeder" legislation.</p>
+                            <strong>2. State Law:</strong> Adopt "super parker" bill similar to proposed "super speeder" legislation.
                         </div>
                         <div class="solution-item">
-                            <strong>3. Street Redesigns</strong>
-                            <p>Dedicated commercial loading zones and emergency vehicle lanes on high-violation routes.</p>
+                            <strong>3. Street Redesigns:</strong> Dedicated commercial loading zones and emergency vehicle lanes on high-violation routes.
                         </div>
                     </div>
                 </div>
             </div>
             
-            <!-- Section 10: Speed Impact -->
-            <div class="chart-section" data-section="10">
-                <div class="chart-title">Impact on Bus Speeds</div>
+            <!-- Section 12: Impact on Speed -->
+            <div class="chart-section has-chart" data-section="12">
+                <div class="chart-title">Impact on Speed</div>
                 <div class="story-content">
-                    <p>Analysis of average MPH changes on ACE routes compared to non-ACE routes.</p>
-                    <p><em>Speed analysis charts would be displayed here based on available data.</em></p>
-                    <div class="data-note">
-                        Note: Congestion pricing zone overlay provides additional context for speed improvements.
+                    <p>To assess the impact of ACE, we examined speed changes along ACE bus routes and compared them to several benchmarks: ACE routes before implementation, non-ACE routes to test for system-wide effects, and routes within the Central Business District (CBD) subject to congestion pricing to capture their combined influence.</p>
+                    <div class="data-highlight">
+                        <strong>Key Finding:</strong> Both congestion pricing and ACE improve bus speeds, and their benefits are cumulative. However, congestion pricing exerts a stronger effect on overall bus performance.
                     </div>
+                </div>
+                <div class="chart-container">
+                    <img src="Data_Tables/ace change in speed.png" alt="ACE Speed Change Analysis" class="chart-image">
                 </div>
             </div>
             
-            <!-- Section 11: Accident Analysis -->
-            <div class="chart-section" data-section="11">
+            <!-- Section 13: ACE Speed Analysis -->
+            <div class="chart-section has-chart" data-section="13">
+                <div class="chart-title">ACE Speed Improvements</div>
+                <div class="story-content">
+                    <p>This time-series chart shows the percent change in speed across the aggregate of all 43 ACE routes from before ACE was implemented on the route to after. The middle 0 point is when ACE was implemented.</p>
+                    <div class="data-highlight">
+                        The line dips just before implementation but quickly climbs afterward, averaging around a <strong>4-5% gain in speed</strong>.
+                    </div>
+                    <p>This implies ACE is correlated with faster bus speeds that sustain for almost a year. The drop off at the 10-month mark is likely due to data and coding-related issues rather than sharp speed declines. However, we still need to compare it to non-ACE routes.</p>
+                </div>
+                <div class="chart-container">
+                    <img src="Data_Tables/Change in MPH from 2019 Baseline.png" alt="Change in MPH from 2019 Baseline" class="chart-image">
+                </div>
+            </div>
+            
+            <!-- Section 14: Non-ACE Route Deep Analysis -->
+            <div class="chart-section has-chart" data-section="14">
+                <div class="chart-title">Non-ACE Route Deep Analysis</div>
+                <div class="story-content">
+                    <p>To deepen the analysis of ACE and congestion pricing, we randomly selected six non-ACE bus routes: three within the congestion zone and three in Brooklyn, outside the zone. The results reveal a clear divide.</p>
+                    <div class="data-highlight">
+                        All three congestion-zone routes show notable speed gains, with the M12 improving by more than 0.15 mph. By contrast, all three Brooklyn routes experienced considerable speed declines.
+                    </div>
+                    <p>This pattern suggests that congestion pricing effectively reduced traffic volumes in the CBD, leading to faster bus travel.</p>
+                    <p>Importantly, these findings do not imply that traffic was simply displaced elsewhere. The B1 and B100 corridors are located far from the CBD and do not directly intersect with it, making it unlikely that congestion shifted to those areas. Instead, the data points toward congestion pricing having a localized effect: easing traffic within the CBD without producing offsetting increases in peripheral corridors.</p>
+                </div>
+                <div class="chart-container">
+                    <img src="Data_Tables/pre-post congestion on non ace.png" alt="Pre-Post Congestion on Non-ACE Routes" class="chart-image">
+                </div>
+            </div>
+            
+            <!-- Section 15: Route Comparison Analysis -->
+            <div class="chart-section has-chart" data-section="15">
+                <div class="chart-title">Route Comparison Analysis</div>
+                <div class="story-content">
+                    <p>We analyzed six non-ACE bus routes: three within the congestion zone and three in Brooklyn. We also examined three CBD routes without ACE until later in the year.</p>
+                    <div class="data-highlight">
+                        <strong>Key Findings:</strong> All congestion-zone routes show speed gains (M12 +0.15 mph, M42 +0.07 mph), while Brooklyn routes experienced declines.
+                    </div>
+                    <p>This confirms congestion pricing effectively reduced CBD traffic without displacing it to peripheral areas.</p>
+                </div>
+                <div class="chart-container">
+                    <img src="Data_Tables/pre and post ace routes in congestion.png" alt="Pre and Post ACE Routes in Congestion Zone" class="chart-image">
+                </div>
+            </div>
+            
+            <!-- Section 16: Did ACE Reduce Accidents? -->
+            <div class="chart-section" data-section="16">
                 <div class="chart-title">Did ACE Reduce Accidents?</div>
                 <div class="story-content">
                     <p>We analyzed the impact of ACE on car accidents and fatalities.</p>
-                    <p><strong>Hypothesis:</strong> ACE expansion would reduce crashes, similar to red light and speeding cameras.</p>
-                    <div class="finding-box">
-                        <strong>Finding:</strong> Our data shows ACE has <strong>minimal, if any, impact</strong> on accidents.
-                    </div>
-                    <p>Unlike speeding or red light violations, illegal parking appears to affect road <em>efficiency</em> more than safety.</p>
+                    <p><strong>Hypothesis:</strong> ACE expansion would have a noticeable reduction in the number of car crashes and fatalities.</p>
+                    <p>Red light and speeding cameras, other forms of automated enforcement, have been proven to reduce crashes. We hypothesized a similar effect from ACE.</p>
                 </div>
             </div>
             
-            <!-- Section 12: Conclusion -->
-            <div class="chart-section" data-section="12">
+            <!-- Section 17: Accident Analysis Results -->
+            <div class="chart-section" data-section="17">
+                <div class="chart-title">Accident Analysis Results</div>
+                <div class="story-content">
+                    <div class="finding-box">
+                        <strong>Finding:</strong> Our data shows ACE has <strong>minimal, if any, impact</strong> on accidents.
+                    </div>
+                    <p>Illegal parking does not seem to have the dangerous effect on roads that speeding or red light violations do, which is understandable. Speeding inherently makes crashes more dangerous and red light violations inherently raise the chance of a crash.</p>
+                    <p><strong>Illegal parking makes roads less efficient, potentially slowing down speeds.</strong></p>
+                    <p>However, our analysis is incomplete. Perhaps as all forms of traffic recovered from COVID accidents would've risen if ACE was not in place. Further research is needed.</p>
+                </div>
+            </div>
+            
+            <!-- Section 18: Conclusion -->
+            <div class="chart-section" data-section="18">
                 <div class="chart-title">Conclusion</div>
                 <div class="story-content">
                     <div class="conclusion-summary">
@@ -876,7 +1501,9 @@
                         <ul>
                             <li>High recidivism among small group of "super parkers"</li>
                             <li>Structural issues force exempt vehicles into violations</li>
-                            <li>ACE improves efficiency but has minimal safety impact</li>
+                            <li>ACE improves bus efficiency with 4-5% speed gains</li>
+                            <li>Congestion pricing shows stronger effect than ACE alone</li>
+                            <li>ACE has minimal impact on accident reduction</li>
                             <li>Solutions require policy changes and street redesigns</li>
                         </ul>
                     </div>
@@ -908,62 +1535,54 @@
             
             <!-- Center: Play Controls -->
             <div class="play-controls">
-                <button class="nav-button prev" onclick="previousMonth()"></button>
-                <button id="play-button" class="play-button" data-symbol="▶" onclick="toggleAnimation()"></button>
-                <button class="nav-button next" onclick="nextMonth()"></button>
+                <div class="left-controls">
+                    <button class="nav-button analysis-toggle" id="analysis-toggle" title="Hide Analysis Panel"></button>
+                    <button class="nav-button prev" onclick="previousMonth()"></button>
+                </div>
+                <div class="center-control">
+                    <button id="play-button" class="play-button" data-symbol="▶" onclick="toggleAnimation()"></button>
+                </div>
+                <div class="right-controls">
+                    <button class="nav-button next" onclick="nextMonth()"></button>
+                    <button id="loop-button" class="nav-button loop" onclick="toggleLoop()" title="Toggle Loop"></button>
+                    <button id="speed-button" class="nav-button speed" onclick="toggleSpeed()" title="Playback Speed: 1x">1x</button>
+                </div>
             </div>
             
-            <!-- Right: Layers and Legend -->
-            <div style="display: flex; flex-direction: column; align-items: flex-end; min-width: 300px;">
-                <div style="display: flex; align-items: center; gap: 20px;">
-                    <div class="data-toggle">
-                        <div>Toggleable Layers</div>
-                        <div class="toggle-buttons">
-                            <button id="crashes-toggle" class="active" onclick="toggleCrashes()">Crashes</button>
-                            <button id="ace-toggle" class="active" onclick="toggleACE()">ACE</button>
-                            <button id="transit-toggle" class="active" onclick="toggleTransit()">Routes</button>
-                            <button id="stops-toggle" class="active" onclick="toggleStops()">Bus Stops</button>
-                            <button id="congestion-toggle" class="active" onclick="toggleCongestionZone()">Congestion</button>
+            <!-- Right: Controls -->
+            <div style="display: flex; flex-direction: column; align-items: flex-end; min-width: 250px;">
+                <!-- Route Coloring (aligned above toggleable layers) -->
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; align-self: flex-start;">
+                    <span style="font-size: 10px; color: #ffffff; font-weight: 600;">Route Mode</span>
+                    <div class="triple-route-slider">
+                        <span class="route-mode-label">Bus</span>
+                        <div class="route-mode-container mode-0" id="route-mode-slider" onclick="cycleRouteMode()">
+                            <div class="route-mode-indicator"></div>
                         </div>
-                    </div>
-                    
-                    <div style="width: 1px; height: 40px; background: #282828; margin: 0 8px;"></div>
-                    
-                    <div class="legend">
-                        <div class="legend-item">
-                            <div style="background: linear-gradient(90deg, #4169e1, #ffd700, #dc143c); width: 24px; height: 6px; border-radius: 3px;"></div>
-                            <span style="color: #b3b3b3; font-size: 10px;">Crashes</span>
-                        </div>
-                        <div class="legend-item">
-                            <div style="background: linear-gradient(90deg, #8a2be2, #ff1493); width: 24px; height: 6px; border-radius: 3px;"></div>
-                            <span style="color: #b3b3b3; font-size: 10px;">ACE</span>
-                        </div>
-                        <div class="legend-item">
-                            <div style="background: #FFD700; width: 12px; height: 12px; border-radius: 2px; opacity: 0.8;"></div>
-                            <span style="color: #b3b3b3; font-size: 10px;">Congestion Zone</span>
-                        </div>
+                        <span class="route-mode-label">ACE Only</span>
                     </div>
                 </div>
                 
-                <div style="margin-top: 8px; display: flex; align-items: center; align-self: flex-start; gap: 12px;">
-                    <span style="font-size: 11px; color: #ffffff; font-weight: 600;">Route Coloring:</span>
-                    <span style="font-size: 10px; color: #b3b3b3; margin-right: 8px;">Regular</span>
-                    <label class="route-toggle-switch">
-                        <input type="checkbox" id="ace-mode-toggle" onchange="toggleACEMode()">
-                        <span class="route-toggle-slider"></span>
-                    </label>
-                    <span style="font-size: 10px; color: #b3b3b3; margin-left: 8px;">ACE Mode</span>
-                    
-                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 16px;">
-                        <div class="legend-item" style="margin: 0; gap: 4px;">
-                            <div style="background: #FF6B6B; width: 16px; height: 4px; border-radius: 2px;"></div>
-                            <span style="color: #b3b3b3; font-size: 9px;">ACE Routes</span>
-                        </div>
-                        <div class="legend-item" style="margin: 0; gap: 4px;">
-                            <div style="background: #0066CC; width: 16px; height: 4px; border-radius: 2px;"></div>
-                            <span style="color: #b3b3b3; font-size: 9px;">Non-ACE Routes</span>
-                        </div>
+                <!-- Toggleable Layers -->
+                <div class="data-toggle">
+                    <div style="font-size: 10px;">Toggleable Layers</div>
+                    <div class="toggle-buttons" style="gap: 4px;">
+                        <button id="crashes-toggle" onclick="toggleCrashes()" style="font-size: 9px; padding: 5px 10px;">Crashes</button>
+                        <button id="ace-toggle" onclick="toggleACE()" style="font-size: 9px; padding: 5px 10px;">Tickets</button>
+                        <button id="transit-toggle" class="active" onclick="toggleTransit()" style="font-size: 9px; padding: 5px 10px;">Routes</button>
+                        <button id="stops-toggle" onclick="toggleStops()" style="font-size: 9px; padding: 5px 10px;">Bus Stops</button>
+                        <button id="congestion-toggle" class="active" onclick="toggleCongestionZone()" style="font-size: 9px; padding: 5px 10px; min-width: 70px;">Congestion</button>
                     </div>
+                </div>
+                
+                <!-- Opacity Control -->
+                <div class="opacity-control">
+                    <label for="opacity-slider" style="display: flex; align-items: center; gap: 4px;">
+                        <img src="Image_Sources/opacity.png" alt="Opacity" style="width: 12px; height: 12px; filter: brightness(0) invert(1);">
+                        <span style="font-size: 10px;">Opacity</span>
+                    </label>
+                    <input type="range" min="10" max="100" value="100" class="opacity-slider" id="opacity-slider" oninput="updateOpacity(this.value)">
+                    <span class="opacity-value" id="opacity-value">100%</span>
                 </div>
             </div>
         </div>
@@ -986,12 +1605,20 @@
         let animationId = null;
         let isPlaying = false;
         let currentViewMode = 'heatmap';
-        let showCrashes = true;
-        let showACE = true;
+        let showCrashes = false; // Start disabled
+        let showACE = false; // Start disabled - renamed to Tickets
         let showTransit = true;
-        let showStops = true;
+        let showStops = false; // Start disabled
         let showCongestionZone = true;
-        let aceMode = false; // false = regular colors, true = ACE coloring
+        let routeMode = 0; // 0 = Bus Routes, 1 = ACE Mode, 2 = ACE Only
+        let globalOpacity = 1.0; // Global opacity for all map layers
+        let isLoopEnabled = false; // Timeline loop toggle
+        let playbackSpeed = 1; // Playback speed multiplier: 1x, 2x, 4x
+        let sliderAnimationId = null; // For smooth slider animation
+        let userInteracting = false; // Track if user is manually adjusting slider
+        let previousPlaybackSpeed = 1; // Store speed before section 3
+        let autoAnimationActive = false; // Track if auto-animation is running
+        let analysisPanelVisible = true; // Analysis panel starts visible
 
         // Initialize the application
         async function initApp() {
@@ -1076,7 +1703,7 @@
                 setupMapLayers();
                 
                 // Now that map is loaded, update visualization and show controls
-                updateVisualization();
+                updateVisualization(false); // Don't smooth on initial load
                 
                 // Initialize story navigation
                 initStoryNavigation();
@@ -1084,11 +1711,87 @@
                 // Hide loading screen and show controls
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('control-panel').style.display = 'block';
+                
+                // Show album cover after everything is loaded
+                setTimeout(() => {
+                    const albumCover = document.querySelector('.album-cover');
+                    if (albumCover) {
+                        albumCover.classList.add('show');
+                    }
+                    
+                    // Initialize analysis toggle button (panel starts visible)
+                    const analysisToggle = document.getElementById('analysis-toggle');
+                    if (analysisToggle) {
+                        analysisToggle.style.backgroundImage = "url('Image_Sources/analysis_enabled.png')";
+                        analysisToggle.style.backgroundColor = 'transparent';
+                        analysisToggle.style.backgroundSize = '16px 16px';
+                        analysisToggle.style.backgroundRepeat = 'no-repeat';
+                        analysisToggle.style.backgroundPosition = 'center';
+                        analysisToggle.style.filter = '';
+                        analysisToggle.title = 'Hide Analysis Panel';
+                    }
+                }, 500);
             });
         }
 
+        function deduplicateBusStops(busStopsData) {
+            // Safety check
+            if (!busStopsData || !busStopsData.features || !Array.isArray(busStopsData.features)) {
+                console.warn('Invalid bus stops data, returning original data');
+                return busStopsData;
+            }
+            
+            const nameMap = new Map();
+            const deduplicatedFeatures = [];
+            
+            try {
+                busStopsData.features.forEach(feature => {
+                    const stopName = feature.properties.stop_name;
+                    
+                    if (!stopName) {
+                        // If no stop name, keep it
+                        deduplicatedFeatures.push(feature);
+                        return;
+                    }
+                    
+                    if (!nameMap.has(stopName)) {
+                        // First occurrence of this stop name
+                        nameMap.set(stopName, feature);
+                        deduplicatedFeatures.push(feature);
+                    } else {
+                        // Duplicate name found - merge route information with existing stop
+                        const existing = nameMap.get(stopName);
+                        
+                        try {
+                            const existingRoutes = JSON.parse(existing.properties.routes_served || '[]');
+                            const newRoutes = JSON.parse(feature.properties.routes_served || '[]');
+                            const combinedRoutes = [...new Set([...existingRoutes, ...newRoutes])];
+                            
+                            existing.properties.routes_served = JSON.stringify(combinedRoutes);
+                        } catch (e) {
+                            console.warn('Error merging route data for duplicate stop:', stopName, e);
+                        }
+                        // Skip adding this duplicate feature to deduplicatedFeatures
+                    }
+                });
+                
+                console.log(`Deduplicated bus stops by name: ${busStopsData.features.length} → ${deduplicatedFeatures.length}`);
+                
+                return {
+                    type: 'FeatureCollection',
+                    features: deduplicatedFeatures
+                };
+            } catch (error) {
+                console.error('Error in deduplicateBusStops:', error);
+                return busStopsData; // Return original data if there's an error
+            }
+        }
+        
         function setupMapLayers() {
+            console.log('Setting up map layers...');
+            
             // Add sources for crashes and ACE data
+            console.log('Adding crash and ACE sources...');
             map.addSource('crashes', {
                 type: 'geojson',
                 data: {
@@ -1106,15 +1809,22 @@
             });
             
             // Add transit sources
+            console.log('Adding transit sources...');
             map.addSource('bus-routes', {
                 type: 'geojson',
                 data: transitData.bus_routes
             });
             
+            // Deduplicate bus stops at the same location
+            console.log('Deduplicating bus stops...');
+            const deduplicatedBusStops = deduplicateBusStops(transitData.bus_stops);
+            console.log('Bus stops deduplicated successfully');
+            
             map.addSource('bus-stops', {
                 type: 'geojson',
-                data: transitData.bus_stops
+                data: deduplicatedBusStops
             });
+            console.log('Bus stops source added');
             
             // Add NYC congestion zone source with actual zone boundaries
             map.addSource('congestion-zone', {
@@ -1330,8 +2040,9 @@
                     'heatmap-opacity': 0.75
                 }
             });
-
-
+            
+            // Set initial layer visibility based on default toggle states
+            setInitialLayerVisibility();
 
             // Click handlers for interactive analysis
             
@@ -1349,6 +2060,7 @@
                     routes_served: routes.slice(0, 5).join(', ') + (routes.length > 5 ? '...' : '')
                 });
             });
+            
             
             // Click anywhere on map for area analysis
             map.on('click', function(e) {
@@ -1377,16 +2089,72 @@
                 map.getCanvas().style.cursor = '';
             });
         }
+        
+        function setInitialLayerVisibility() {
+            // Set layer visibility based on initial toggle states
+            map.setLayoutProperty('crashes-heatmap', 'visibility', showCrashes ? 'visible' : 'none');
+            map.setLayoutProperty('ace-heatmap', 'visibility', showACE ? 'visible' : 'none');
+            map.setLayoutProperty('bus-routes', 'visibility', showTransit ? 'visible' : 'none');
+            map.setLayoutProperty('bus-route-labels', 'visibility', showTransit ? 'visible' : 'none');
+            map.setLayoutProperty('bus-stops', 'visibility', showStops ? 'visible' : 'none');
+            map.setLayoutProperty('congestion-zone', 'visibility', showCongestionZone ? 'visible' : 'none');
+            map.setLayoutProperty('congestion-zone-border', 'visibility', showCongestionZone ? 'visible' : 'none');
+            
+            console.log('Initial layer visibility set:', {
+                crashes: showCrashes,
+                ace: showACE,
+                transit: showTransit,
+                stops: showStops,
+                congestion: showCongestionZone
+            });
+        }
 
+        function getMonthIndexFromSliderValue(sliderValue) {
+            // Simplified month detection to prevent glitching at high speeds
+            const monthCount = combinedData.crash_data.unique_months.length;
+            const stepsPerMonth = 1000;
+            
+            // Use simple rounding for smoother behavior at high speeds
+            const rawMonthIndex = sliderValue / stepsPerMonth;
+            let monthIndex = Math.floor(rawMonthIndex + 0.3); // Slight bias toward staying in current month
+            
+            // Ensure we stay within bounds
+            monthIndex = Math.max(0, Math.min(monthCount - 1, monthIndex));
+            
+            return monthIndex;
+        }
+        
         function setupUI() {
-            // Setup slider
+            // Setup slider with high resolution for smooth animation
             const slider = document.getElementById('time-slider');
             if (slider) {
-                slider.max = combinedData.crash_data.unique_months.length - 1;
+                const monthCount = combinedData.crash_data.unique_months.length;
+                // Use 1000 steps per month for ultra-smooth animation
+                slider.max = (monthCount - 1) * 1000;
+                slider.step = 1;
+                
+                // Track user interaction with slider
+                slider.addEventListener('mousedown', () => {
+                    userInteracting = true;
+                });
+                
+                slider.addEventListener('touchstart', () => {
+                    userInteracting = true;
+                });
+                
+                slider.addEventListener('mouseup', () => {
+                    setTimeout(() => { userInteracting = false; }, 100); // Small delay to ensure smooth transition
+                });
+                
+                slider.addEventListener('touchend', () => {
+                    setTimeout(() => { userInteracting = false; }, 100);
+                });
                 
                 slider.addEventListener('input', (e) => {
-                    currentMonthIndex = parseInt(e.target.value);
-                    updateVisualization();
+                    // Convert high-res slider value back to month index with smooth ranges
+                    const sliderValue = parseFloat(e.target.value);
+                    currentMonthIndex = getMonthIndexFromSliderValue(sliderValue);
+                    updateVisualization(false); // Don't smooth when user drags slider
                 });
             }
             
@@ -1410,7 +2178,45 @@
             document.getElementById('slider-end-date').textContent = endDate;
         }
 
-        function updateVisualization() {
+        function smoothUpdateSlider(targetMonthIndex) {
+            const slider = document.getElementById('time-slider');
+            const startValue = parseFloat(slider.value);
+            // Convert month index to high-res slider value (1000 steps per month)
+            const targetValue = targetMonthIndex * 1000;
+            
+            console.log(`Smooth slider update: ${startValue} → ${targetValue} (month ${targetMonthIndex})`);
+            
+            // Simple smooth animation using requestAnimationFrame
+            const duration = Math.max(200, 500 / playbackSpeed);
+            const startTime = performance.now();
+            
+            // Cancel any existing animation
+            if (sliderAnimationId) {
+                cancelAnimationFrame(sliderAnimationId);
+            }
+            
+            const animate = (currentTime) => {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Use ease-out for natural feeling
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const currentValue = startValue + (targetValue - startValue) * easeOut;
+                
+                slider.value = currentValue;
+                
+                if (progress < 1) {
+                    sliderAnimationId = requestAnimationFrame(animate);
+                } else {
+                    slider.value = targetValue;
+                    sliderAnimationId = null;
+                }
+            };
+            
+            sliderAnimationId = requestAnimationFrame(animate);
+        }
+        
+        function updateVisualization(smoothSlider = true) {
             if (!combinedData || !map || !map.getSource('crashes') || !map.getSource('ace-cameras')) {
                 console.log('Waiting for map and data to be ready...');
                 return;
@@ -1432,7 +2238,15 @@
             document.getElementById('month-display').textContent = currentLabel;
             document.getElementById('crash-count').textContent = `${currentCrashData.features.length.toLocaleString()} crashes`;
             document.getElementById('ace-count').textContent = `${totalTicketsThisMonth.toLocaleString()} tickets issued`;
-            document.getElementById('time-slider').value = currentMonthIndex;
+            
+            // Update slider smoothly or instantly
+            if (smoothSlider && isPlaying) {
+                console.log(`Using smooth slider update (isPlaying: ${isPlaying}, speed: ${playbackSpeed}x)`);
+                smoothUpdateSlider(currentMonthIndex);
+            } else {
+                console.log(`Using instant slider update (smoothSlider: ${smoothSlider}, isPlaying: ${isPlaying})`);
+                document.getElementById('time-slider').value = currentMonthIndex * 1000;
+            }
             
             // Update left date label with current selected date
             const currentDateFormatted = formatDateToMMYYYY(currentMonth);
@@ -1443,9 +2257,9 @@
 
         function toggleCrashes() {
             showCrashes = !showCrashes;
-            const visibility = showCrashes ? 'visible' : 'none';
             
-            map.setLayoutProperty('crashes-heatmap', 'visibility', visibility);
+            // Animate the visibility change
+            animateLayerVisibility('crashes-heatmap', showCrashes);
             
             document.getElementById('crashes-toggle').classList.toggle('active', showCrashes);
         }
@@ -1461,10 +2275,9 @@
         
         function toggleTransit() {
             showTransit = !showTransit;
-            const visibility = showTransit ? 'visible' : 'none';
             
-            map.setLayoutProperty('bus-routes', 'visibility', visibility);
-            map.setLayoutProperty('bus-route-labels', 'visibility', visibility);
+            // Use updateRouteColoring to respect current route mode filtering
+            updateRouteColoring();
             
             document.getElementById('transit-toggle').classList.toggle('active', showTransit);
         }
@@ -1488,8 +2301,18 @@
             document.getElementById('congestion-toggle').classList.toggle('active', showCongestionZone);
         }
         
-        function toggleACEMode() {
-            aceMode = document.getElementById('ace-mode-toggle').checked;
+        function cycleRouteMode() {
+            routeMode = (routeMode + 1) % 3;
+            updateRouteMode();
+        }
+        
+        function updateRouteMode() {
+            const slider = document.getElementById('route-mode-slider');
+            
+            // Update slider visual state
+            slider.className = `route-mode-container mode-${routeMode}`;
+            
+            // Update route coloring and visibility based on mode
             updateRouteColoring();
         }
         
@@ -1504,22 +2327,164 @@
                 'Q44', 'Q58', 'Q32', 'Q53', 'Q101', 'Q102', 'Q103'
             ];
             
-            if (aceMode) {
-                // ACE Mode: ACE routes red, others blue
+            if (routeMode === 0) {
+                // Mode 0: Bus Routes - Each route has its own color
+                // Remove any filters first
+                map.setFilter('bus-routes', null);
+                map.setFilter('bus-route-labels', null);
+                
+                map.setPaintProperty('bus-routes', 'line-color', [
+                    'case',
+                    ['has', 'route_color'], ['get', 'route_color'],
+                    '#00A8E8' // Default blue
+                ]);
+                
+                // Show all routes and labels
+                map.setLayoutProperty('bus-routes', 'visibility', showTransit ? 'visible' : 'none');
+                map.setLayoutProperty('bus-route-labels', 'visibility', showTransit ? 'visible' : 'none');
+            } else if (routeMode === 1) {
+                // Mode 1: ACE Mode - ACE routes red, others blue
+                // Remove any filters first
+                map.setFilter('bus-routes', null);
+                map.setFilter('bus-route-labels', null);
+                
                 map.setPaintProperty('bus-routes', 'line-color', [
                     'case',
                     ['in', ['get', 'route_name'], ['literal', aceRoutes]], 
                     '#FF6B6B', // Red for ACE routes
                     '#0066CC'  // Blue for non-ACE routes
                 ]);
-            } else {
-                // Regular Mode: Each route has its own color (or default)
-                map.setPaintProperty('bus-routes', 'line-color', [
-                    'case',
-                    ['has', 'route_color'], ['get', 'route_color'],
-                    '#00A8E8' // Default blue
-                ]);
+                
+                // Show all routes and labels
+                map.setLayoutProperty('bus-routes', 'visibility', showTransit ? 'visible' : 'none');
+                map.setLayoutProperty('bus-route-labels', 'visibility', showTransit ? 'visible' : 'none');
+            } else if (routeMode === 2) {
+                // Mode 2: ACE Only - Show only ACE routes in red
+                map.setPaintProperty('bus-routes', 'line-color', '#FF6B6B');
+                
+                // Filter to show only ACE routes
+                map.setFilter('bus-routes', ['in', ['get', 'route_name'], ['literal', aceRoutes]]);
+                map.setFilter('bus-route-labels', ['in', ['get', 'route_name'], ['literal', aceRoutes]]);
+                
+                // Show filtered routes and labels
+                map.setLayoutProperty('bus-routes', 'visibility', showTransit ? 'visible' : 'none');
+                map.setLayoutProperty('bus-route-labels', 'visibility', showTransit ? 'visible' : 'none');
             }
+            
+            console.log(`Route mode updated to: ${routeMode} (${['Bus Routes', 'ACE Mode', 'ACE Only'][routeMode]})`);
+        }
+        
+        // Fade animation system for layer visibility changes
+        function animateLayerVisibility(layerName, show, duration = 300) {
+            if (!map.getLayer(layerName)) return Promise.resolve();
+            
+            return new Promise((resolve) => {
+                const startTime = performance.now();
+                let originalOpacity = null;
+                
+                // Get the current opacity property name based on layer type
+                const getOpacityProperty = (layer) => {
+                    const layerType = map.getLayer(layer).type;
+                    switch (layerType) {
+                        case 'heatmap': return 'heatmap-opacity';
+                        case 'line': return 'line-opacity';
+                        case 'circle': return 'circle-opacity';
+                        case 'fill': return 'fill-opacity';
+                        case 'symbol': return 'text-opacity';
+                        default: return 'opacity';
+                    }
+                };
+                
+                const opacityProperty = getOpacityProperty(layerName);
+                
+                // Get original opacity values
+                const originalOpacities = {
+                    'crashes-heatmap': 0.75,
+                    'ace-heatmap': 0.65,
+                    'bus-routes': 0.6,
+                    'bus-stops': 0.8,
+                    'congestion-zone': 0.2,
+                    'congestion-zone-border': 0.8,
+                    'bus-route-labels': 0.9
+                };
+                
+                originalOpacity = originalOpacities[layerName] || 1.0;
+                const targetOpacity = show ? originalOpacity * globalOpacity : 0;
+                
+                // Ensure layer is visible during fade
+                map.setLayoutProperty(layerName, 'visibility', 'visible');
+                
+                const animate = (currentTime) => {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Use ease-in-out for smooth transitions
+                    const easeInOut = progress < 0.5 
+                        ? 2 * progress * progress 
+                        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+                    
+                    const currentOpacity = show 
+                        ? easeInOut * targetOpacity
+                        : originalOpacity * globalOpacity * (1 - easeInOut);
+                    
+                    try {
+                        map.setPaintProperty(layerName, opacityProperty, currentOpacity);
+                    } catch (error) {
+                        console.warn(`Could not set ${opacityProperty} for ${layerName}:`, error);
+                    }
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Final state
+                        if (!show) {
+                            map.setLayoutProperty(layerName, 'visibility', 'none');
+                        }
+                        resolve();
+                    }
+                };
+                
+                requestAnimationFrame(animate);
+            });
+        }
+        
+        // Animate multiple layers simultaneously
+        function animateMultipleLayers(layerChanges, duration = 300) {
+            const promises = layerChanges.map(({ layer, show }) => 
+                animateLayerVisibility(layer, show, duration)
+            );
+            return Promise.all(promises);
+        }
+        
+        function updateOpacity(value) {
+            // Convert percentage to decimal (10-100 -> 0.1-1.0)
+            globalOpacity = value / 100;
+            
+            // Update opacity display
+            document.getElementById('opacity-value').textContent = value + '%';
+            
+            // Define original opacity values for proper scaling
+            const layersToUpdate = [
+                { layer: 'crashes-heatmap', property: 'heatmap-opacity', originalOpacity: 0.75 },
+                { layer: 'ace-heatmap', property: 'heatmap-opacity', originalOpacity: 0.65 },
+                { layer: 'bus-routes', property: 'line-opacity', originalOpacity: 0.6 },
+                { layer: 'bus-stops', property: 'circle-opacity', originalOpacity: 0.8 },
+                { layer: 'bus-stops', property: 'circle-stroke-opacity', originalOpacity: 1.0 },
+                { layer: 'congestion-zone', property: 'fill-opacity', originalOpacity: 0.2 },
+                { layer: 'congestion-zone-border', property: 'line-opacity', originalOpacity: 0.8 },
+                { layer: 'bus-route-labels', property: 'text-opacity', originalOpacity: 0.9 },
+                { layer: 'bus-route-labels', property: 'text-halo-opacity', originalOpacity: 1.0 }
+            ];
+            
+            layersToUpdate.forEach(({ layer, property, originalOpacity }) => {
+                if (map.getLayer(layer)) {
+                    // Scale the original opacity by the global opacity multiplier
+                    const newOpacity = originalOpacity * globalOpacity;
+                    map.setPaintProperty(layer, property, newOpacity);
+                }
+            });
+            
+            console.log(`Updated global opacity to ${(globalOpacity * 100).toFixed(0)}%`);
         }
         
         // Story navigation functionality
@@ -1541,20 +2506,7 @@
                 }
             });
             
-            // Add wheel event for manual control
-            storyDisplay.addEventListener('wheel', function(e) {
-                e.preventDefault();
-                
-                if (isScrolling) return;
-                
-                if (e.deltaY > 0) {
-                    // Scroll down - next section
-                    showNextSection();
-                } else {
-                    // Scroll up - previous section
-                    showPreviousSection();
-                }
-            });
+            // Removed wheel event handler - rely on natural scroll behavior
         }
         
         function createProgressDots() {
@@ -1599,6 +2551,8 @@
         }
         
         function setActiveSection(index) {
+            console.log(`setActiveSection called with index: ${index}`);
+            
             // Remove active class from all sections
             sections.forEach(section => section.classList.remove('active'));
             
@@ -1614,7 +2568,381 @@
             // Update counter
             document.getElementById('section-counter').textContent = `${index + 1} / ${sections.length}`;
             
+            // Store the previous section before updating (but don't update currentSectionIndex yet)
+            const previousSectionIndex = currentSectionIndex;
+            
+            // Hierarchical slide setup - specific slides override general rules
+            
+            // Handle data display based on slide ranges (avoid conflicts)
+            if (index >= 0 && index <= 1) {
+                // Slides 1-2: No crashes, no tickets
+                console.log(`Slide ${index + 1}: No crashes, no tickets`);
+                
+                // Turn off crashes if they're on
+                if (showCrashes) {
+                    const crashesToggle = document.getElementById('crashes-toggle');
+                    if (crashesToggle) {
+                        crashesToggle.click();
+                    }
+                }
+                
+                // Turn off tickets if they're on
+                if (showACE) {
+                    const aceToggle = document.getElementById('ace-toggle');
+                    if (aceToggle) {
+                        aceToggle.click();
+                    }
+                }
+            } else if (index >= 2 && index <= 15) {
+                // Slides 3-16: Tickets on, crashes off
+                console.log(`Slide ${index + 1}: Tickets on, crashes off`);
+                
+                // Turn on tickets if they're off
+                if (!showACE) {
+                    const aceToggle = document.getElementById('ace-toggle');
+                    if (aceToggle) {
+                        aceToggle.click();
+                    }
+                }
+                
+                // Turn off crashes if they're on
+                if (showCrashes) {
+                    const crashesToggle = document.getElementById('crashes-toggle');
+                    if (crashesToggle) {
+                        crashesToggle.click();
+                    }
+                }
+            } else if (index >= 16 && index <= 17) {
+                // Slides 17-18: Crashes on, tickets off (keep animation running)
+                console.log(`Slide ${index + 1}: Crashes on, tickets off`);
+                console.log(`Current state before changes - Crashes: ${showCrashes}, Tickets: ${showACE}`);
+                
+                // Turn off tickets if they're on
+                if (showACE) {
+                    console.log('Turning off tickets...');
+                    const aceToggle = document.getElementById('ace-toggle');
+                    if (aceToggle) {
+                        aceToggle.click();
+                    }
+                }
+                
+                // Turn on crashes if they're off (with a small delay to avoid conflicts)
+                if (!showCrashes) {
+                    console.log('Turning on crashes...');
+                    setTimeout(() => {
+                        const crashesToggle = document.getElementById('crashes-toggle');
+                        if (crashesToggle && !showCrashes) { // Double-check before toggling
+                            crashesToggle.click();
+                        }
+                    }, 50); // Small delay to ensure tickets are fully turned off first
+                } else {
+                    console.log('Crashes already on, no need to toggle');
+                }
+                
+                console.log(`State after changes - Crashes: ${showCrashes}, Tickets: ${showACE}`);
+            }
+            
+            // Slide 1 specific setup
+            if (index === 0) {
+                console.log('Slide 1: Resetting to default state');
+                
+                // Reset route mode to default (Bus Routes - mode 0)
+                if (routeMode !== 0) {
+                    const routeModeSlider = document.getElementById('route-mode-slider');
+                    if (routeModeSlider) {
+                        // Click until we reach mode 0 (Bus Routes)
+                        while (routeMode !== 0) {
+                            routeModeSlider.click();
+                        }
+                    }
+                }
+                
+                // Turn on congestion zone if it's off (default is on)
+                if (!showCongestionZone) {
+                    const congestionToggle = document.getElementById('congestion-toggle');
+                    if (congestionToggle) {
+                        congestionToggle.click();
+                    }
+                }
+            }
+            
+            // Special handling for slides 2-12 (index 1-11) - ACE mode on
+            if (index >= 1 && index <= 11) {
+                console.log(`Slide ${index + 1}: Setting ACE mode on`);
+                
+                // Set route mode to ACE mode (mode 1)
+                if (routeMode !== 1) {
+                    const routeModeSlider = document.getElementById('route-mode-slider');
+                    if (routeModeSlider) {
+                        // Click until we reach mode 1 (ACE mode)
+                        while (routeMode !== 1) {
+                            routeModeSlider.click();
+                        }
+                    }
+                }
+                
+                // Slide 2 specific setup - turn off congestion zone
+                if (index === 1 && previousSectionIndex !== 2) {
+                    console.log('Slide 2: Also turning off congestion zone (not coming from slide 3)');
+                    
+                    // Turn off congestion zone if it's on
+                    if (showCongestionZone) {
+                        const congestionToggle = document.getElementById('congestion-toggle');
+                        if (congestionToggle) {
+                            congestionToggle.click();
+                        }
+                    }
+                }
+            }
+            
+            // Special handling for slide 3 (index 2) - Congestion on, tickets on, reduced route opacity
+            if (index === 2) {
+                console.log('Slide 3: Setting congestion on, tickets on, and reducing route opacity');
+                
+                // Turn on congestion zone if it's off
+                if (!showCongestionZone) {
+                    const congestionToggle = document.getElementById('congestion-toggle');
+                    if (congestionToggle) {
+                        congestionToggle.click();
+                    }
+                }
+                
+                // Turn on tickets (ACE data) if it's off
+                if (!showACE) {
+                    const aceToggle = document.getElementById('ace-toggle');
+                    if (aceToggle) {
+                        aceToggle.click();
+                    }
+                }
+                
+                // Reduce route opacity to make congestion zone and tickets more prominent
+                if (map.getLayer('bus-routes')) {
+                    map.setPaintProperty('bus-routes', 'line-opacity', 0.2);
+                }
+                if (map.getLayer('bus-route-labels')) {
+                    map.setPaintProperty('bus-route-labels', 'text-opacity', 0.3);
+                    map.setPaintProperty('bus-route-labels', 'text-halo-opacity', 0.3);
+                }
+            }
+            
+            // Special handling for slide 3 specifically - Always set up loop animation
+            if (index === 2) {
+                console.log('Slide 3: Setting up loop animation explicitly (with delay)');
+                
+                // Add a small delay to let other slide 3 setup complete first
+                setTimeout(() => {
+                    console.log('Slide 3: Starting delayed animation setup');
+                    
+                    // Force stop any current animation first
+                    if (isPlaying) {
+                        console.log('Stopping current animation before setup');
+                        stopAnimation();
+                    }
+                    
+                    // Store current speed before changing to 4x
+                    if (playbackSpeed !== 4) {
+                        previousPlaybackSpeed = playbackSpeed;
+                        console.log(`Storing previous speed: ${previousPlaybackSpeed}x, setting to 4x...`);
+                        
+                        // Set speed directly to 4x
+                        playbackSpeed = 4;
+                        const speedButton = document.getElementById('speed-button');
+                        if (speedButton) {
+                            speedButton.textContent = '4x';
+                            speedButton.title = 'Playback Speed: 4x';
+                        }
+                        console.log('Set playback speed directly to 4x');
+                    }
+                    
+                    // Enable loop directly
+                    console.log(`Current loop state: ${isLoopEnabled}, enabling loop...`);
+                    if (!isLoopEnabled) {
+                        toggleLoop();
+                        console.log(`Loop enabled via toggleLoop(), new state: ${isLoopEnabled}`);
+                    } else {
+                        console.log('Loop already enabled');
+                    }
+                    
+                    // Start playback directly
+                    console.log(`Current playing state: ${isPlaying}, starting playback...`);
+                    if (!isPlaying) {
+                        startAnimation();
+                        console.log(`Animation started via startAnimation(), new state: ${isPlaying}`);
+                    } else {
+                        console.log('Animation already playing');
+                    }
+                    
+                    // Double-check final states
+                    setTimeout(() => {
+                        console.log(`Final check - Loop: ${isLoopEnabled}, Playing: ${isPlaying}, Speed: ${playbackSpeed}x`);
+                        if (!isPlaying) {
+                            console.log('ERROR: Animation still not playing after setup!');
+                        }
+                        if (!isLoopEnabled) {
+                            console.log('ERROR: Loop still not enabled after setup!');
+                        }
+                    }, 50);
+                    
+                    console.log('Started 4x speed looped timeline animation for slide 3');
+                    autoAnimationActive = true;
+                }, 100); // 100ms delay to let other changes settle
+            }
+            
+            
+            // Special handling for slides 4-17 (index 3-16) - Keep animation running
+            if (index >= 3 && index <= 16) {
+                console.log(`On slide ${index + 1} - Animation should be running (slides 4-17)`);
+                
+                // Ensure animation is still running (don't restart if already running)
+                if (!isPlaying) {
+                    console.log('Animation stopped, restarting...');
+                    startAnimation();
+                }
+                if (!isLoopEnabled) {
+                    console.log('Loop disabled, re-enabling...');
+                    toggleLoop();
+                }
+                if (playbackSpeed !== 4) {
+                    console.log('Speed not 4x, fixing and restarting animation...');
+                    playbackSpeed = 4;
+                    const speedButton = document.getElementById('speed-button');
+                    if (speedButton) {
+                        speedButton.textContent = '4x';
+                        speedButton.title = 'Playback Speed: 4x';
+                    }
+                    // Restart animation to pick up new speed
+                    if (isPlaying) {
+                        stopAnimation();
+                        startAnimation();
+                    }
+                }
+                
+                autoAnimationActive = true;
+            } else {
+                // Slides 1-2 and 18+: Reset to normal behavior
+                resetMapOpacity();
+            }
+            
+            // Reset route opacity when leaving slide 3
+            if (previousSectionIndex === 2 && index !== 2) {
+                console.log('Leaving slide 3: Resetting route opacity');
+                resetMapOpacity();
+                
+                // Special handling when going from slide 3 to slide 2
+                if (index === 1) {
+                    console.log('Going from slide 3 to slide 2: Setting up slide 2 configuration');
+                    
+                    // Set route mode to ACE mode (mode 1)
+                    if (routeMode !== 1) {
+                        const routeModeSlider = document.getElementById('route-mode-slider');
+                        if (routeModeSlider) {
+                            // Click until we reach mode 1 (ACE mode)
+                            while (routeMode !== 1) {
+                                routeModeSlider.click();
+                            }
+                        }
+                    }
+                    
+                    // Turn off congestion zone if it's on
+                    if (showCongestionZone) {
+                        const congestionToggle = document.getElementById('congestion-toggle');
+                        if (congestionToggle) {
+                            congestionToggle.click();
+                        }
+                    }
+                }
+            }
+            
+            // Stop auto-animation when leaving the entire 3-12 range (slides 3-12)
+            if (currentSectionIndex >= 2 && currentSectionIndex <= 11 && (index < 2 || index > 11)) {
+                console.log('Leaving auto-play section (slides 3-11)');
+                
+                // Restore previous speed
+                if (playbackSpeed === 4 && previousPlaybackSpeed !== 4) {
+                    console.log(`Restoring previous speed: ${previousPlaybackSpeed}x`);
+                    playbackSpeed = previousPlaybackSpeed;
+                    const speedButton = document.getElementById('speed-button');
+                    if (speedButton) {
+                        speedButton.textContent = `${previousPlaybackSpeed}x`;
+                        speedButton.title = `Playback Speed: ${previousPlaybackSpeed}x`;
+                    }
+                    console.log('Speed restored directly');
+                }
+                
+                // Stop animation
+                if (isPlaying) {
+                    console.log('Stopping playback...');
+                    stopAnimation();
+                }
+                
+                // Disable loop
+                if (isLoopEnabled) {
+                    console.log('Disabling loop...');
+                    toggleLoop();
+                }
+                
+                console.log('Left auto-play section: Restored speed and stopped timeline animation');
+                autoAnimationActive = false;
+            }
+            
+            // Update currentSectionIndex at the very end
             currentSectionIndex = index;
+        }
+        
+        function adjustMapForACESection() {
+            // Highlight ACE heatmap and keep bus routes, dim everything else
+            const layerAdjustments = [
+                { layer: 'crashes-heatmap', property: 'heatmap-opacity', opacity: 0.1 }, // Very low opacity
+                { layer: 'ace-heatmap', property: 'heatmap-opacity', opacity: 0.8 }, // Prominent ACE
+                { layer: 'bus-routes', property: 'line-opacity', opacity: 0.6 }, // Keep bus routes visible
+                { layer: 'bus-stops', property: 'circle-opacity', opacity: 0.1 }, // Very low opacity
+                { layer: 'bus-stops', property: 'circle-stroke-opacity', opacity: 0.1 }, // Very low opacity
+                { layer: 'congestion-zone', property: 'fill-opacity', opacity: 0.05 }, // Very low opacity
+                { layer: 'congestion-zone-border', property: 'line-opacity', opacity: 0.1 }, // Very low opacity
+                { layer: 'bus-route-labels', property: 'text-opacity', opacity: 0.4 }, // Dim but readable
+                { layer: 'bus-route-labels', property: 'text-halo-opacity', opacity: 0.3 } // Dim the text halo/border
+            ];
+            
+            layerAdjustments.forEach(({ layer, property, opacity }) => {
+                try {
+                    if (map.getLayer(layer)) {
+                        map.setPaintProperty(layer, property, opacity);
+                    }
+                } catch (error) {
+                    console.warn(`Could not set ${property} for layer ${layer}:`, error);
+                }
+            });
+            
+            console.log('Adjusted map for ACE section: ACE prominent, others dimmed');
+        }
+        
+        function resetMapOpacity() {
+            // Reset to original opacity values (scaled by global opacity if set)
+            const originalOpacities = [
+                { layer: 'crashes-heatmap', property: 'heatmap-opacity', originalOpacity: 0.75 },
+                { layer: 'ace-heatmap', property: 'heatmap-opacity', originalOpacity: 0.65 },
+                { layer: 'bus-routes', property: 'line-opacity', originalOpacity: 0.6 },
+                { layer: 'bus-stops', property: 'circle-opacity', originalOpacity: 0.8 },
+                { layer: 'bus-stops', property: 'circle-stroke-opacity', originalOpacity: 1.0 },
+                { layer: 'congestion-zone', property: 'fill-opacity', originalOpacity: 0.2 },
+                { layer: 'congestion-zone-border', property: 'line-opacity', originalOpacity: 0.8 },
+                { layer: 'bus-route-labels', property: 'text-opacity', originalOpacity: 0.9 },
+                { layer: 'bus-route-labels', property: 'text-halo-opacity', originalOpacity: 1.0 } // Reset halo/border
+            ];
+            
+            originalOpacities.forEach(({ layer, property, originalOpacity }) => {
+                try {
+                    if (map.getLayer(layer)) {
+                        // Scale by global opacity if it's been changed
+                        const scaledOpacity = originalOpacity * globalOpacity;
+                        map.setPaintProperty(layer, property, scaledOpacity);
+                    }
+                } catch (error) {
+                    console.warn(`Could not reset ${property} for layer ${layer}:`, error);
+                }
+            });
+            
+            console.log('Reset map to normal opacity values');
         }
         
         function showNextSection() {
@@ -1625,6 +2953,12 @@
         function showPreviousSection() {
             const prevIndex = Math.max(currentSectionIndex - 1, 0);
             showSection(prevIndex);
+        }
+        
+        // Direct navigation function for testing
+        function goToThirdSection() {
+            console.log('Direct navigation to section 3');
+            showSection(2); // Index 2 = 3rd section
         }
         
         function showAllData() {
@@ -1663,7 +2997,7 @@
             document.getElementById('month-display').textContent = 'All Months';
             document.getElementById('crash-count').textContent = `${allCrashFeatures.length.toLocaleString()} crashes`;
             document.getElementById('ace-count').textContent = `${totalTickets.toLocaleString()} tickets issued`;
-            document.getElementById('time-slider').value = combinedData.crash_data.unique_months.length - 1;
+            document.getElementById('time-slider').value = (combinedData.crash_data.unique_months.length - 1) * 1000;
             
             currentMonthIndex = combinedData.crash_data.unique_months.length - 1;
         }
@@ -1726,6 +3060,15 @@
             });
             
             const uniqueRoutes = [...new Set(nearbyRoutes.map(r => r.properties.route_name))].slice(0, 5);
+            
+            // Check if there's any relevant data in the area
+            const hasData = totalCrashes > 0 || totalACETickets > 0 || uniqueRoutes.length > 0 || Object.keys(additionalInfo).length > 0;
+            
+            // Don't show popup if no data is found
+            if (!hasData) {
+                console.log('No data found in clicked area, skipping popup');
+                return;
+            }
             
             // Create popup content
             let popupContent = `
@@ -1793,7 +3136,7 @@
             }
             
             currentMonthIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : combinedData.crash_data.unique_months.length - 1;
-            updateVisualization();
+            updateVisualization(false); // Don't smooth for manual navigation
         }
         
         function nextMonth() {
@@ -1804,7 +3147,7 @@
             }
             
             currentMonthIndex = (currentMonthIndex + 1) % combinedData.crash_data.unique_months.length;
-            updateVisualization();
+            updateVisualization(false); // Don't smooth for manual navigation
         }
         
         function toggleAnimation() {
@@ -1819,15 +3162,66 @@
             isPlaying = true;
             document.getElementById('play-button').setAttribute('data-symbol', '⏸');
             
-            animationId = setInterval(() => {
-                currentMonthIndex = (currentMonthIndex + 1) % combinedData.crash_data.unique_months.length;
-                updateVisualization();
+            // Calculate timing for consistent speed
+            const monthCount = combinedData.crash_data.unique_months.length;
+            const totalSliderRange = (monthCount - 1) * 1000;
+            
+            let currentSliderPosition = parseFloat(document.getElementById('time-slider').value) || 0;
+            let lastFrameTime = performance.now();
+            let lastDataUpdate = 0;
+            
+            // Calculate steps per second for consistent timing
+            const baseStepsPerSecond = 500; // Base speed: 500 steps per second
+            const stepsPerSecond = baseStepsPerSecond * playbackSpeed;
+            
+            const animateFrame = (currentTime) => {
+                if (!isPlaying) return;
                 
-                // Stop at the end if we've looped
-                if (currentMonthIndex === 0) {
-                    stopAnimation();
+                // Calculate delta time for consistent speed regardless of frame rate
+                const deltaTime = currentTime - lastFrameTime;
+                lastFrameTime = currentTime;
+                
+                // Move based on actual time passed (60fps = ~16.67ms per frame)
+                const stepsToMove = (stepsPerSecond * deltaTime) / 1000;
+                currentSliderPosition += stepsToMove;
+                
+                // Handle looping
+                if (currentSliderPosition >= totalSliderRange) {
+                    if (isLoopEnabled) {
+                        currentSliderPosition = 0;
+                        lastDataUpdate = 0; // Reset data update timer
+                    } else {
+                        stopAnimation();
+                        return;
+                    }
                 }
-            }, 600); // 600ms between months for better ACE visibility
+                
+                // Update slider position only if user isn't interacting
+                const slider = document.getElementById('time-slider');
+                if (slider && !userInteracting) {
+                    slider.value = currentSliderPosition;
+                } else if (userInteracting) {
+                    // If user is interacting, sync our internal position with slider
+                    currentSliderPosition = parseFloat(slider.value) || currentSliderPosition;
+                }
+                
+                // Update month index and visualization (less frequently for performance)
+                const newMonthIndex = getMonthIndexFromSliderValue(currentSliderPosition);
+                if (newMonthIndex !== currentMonthIndex) {
+                    // Minimum time between data updates based on speed
+                    const minUpdateInterval = Math.max(50, 200 / playbackSpeed);
+                    if (currentTime - lastDataUpdate > minUpdateInterval) {
+                        currentMonthIndex = newMonthIndex;
+                        updateVisualization(false);
+                        lastDataUpdate = currentTime;
+                    }
+                }
+                
+                // Continue animation
+                animationId = requestAnimationFrame(animateFrame);
+            };
+            
+            animationId = requestAnimationFrame(animateFrame);
         }
 
         function stopAnimation() {
@@ -1835,13 +3229,106 @@
             document.getElementById('play-button').setAttribute('data-symbol', '▶');
             
             if (animationId) {
-                clearInterval(animationId);
+                cancelAnimationFrame(animationId);
                 animationId = null;
             }
         }
+        
+        function toggleLoop() {
+            isLoopEnabled = !isLoopEnabled;
+            const loopButton = document.getElementById('loop-button');
+            
+            if (isLoopEnabled) {
+                loopButton.style.backgroundImage = "url('Image_Sources/loop_enabled.png')";
+                loopButton.style.backgroundColor = 'transparent';
+                loopButton.style.backgroundSize = '22px 22px';
+                loopButton.style.backgroundRepeat = 'no-repeat';
+                loopButton.style.backgroundPosition = 'center';
+                loopButton.style.filter = '';
+                loopButton.title = 'Loop Enabled - Click to disable';
+                loopButton.classList.add('active');
+            } else {
+                loopButton.style.backgroundImage = "url('Image_Sources/loop.png')";
+                loopButton.style.backgroundColor = 'transparent';
+                loopButton.style.backgroundSize = '22px 22px';
+                loopButton.style.backgroundRepeat = 'no-repeat';
+                loopButton.style.backgroundPosition = 'center';
+                loopButton.style.filter = 'brightness(0) invert(1) opacity(0.6)';
+                loopButton.title = 'Loop Disabled - Click to enable';
+                loopButton.classList.remove('active');
+            }
+            
+            console.log(`Loop ${isLoopEnabled ? 'enabled' : 'disabled'}`);
+        }
+        
+        function toggleSpeed() {
+            // Cycle through speeds: 1x -> 2x -> 4x -> 1x
+            if (playbackSpeed === 1) {
+                playbackSpeed = 2;
+            } else if (playbackSpeed === 2) {
+                playbackSpeed = 4;
+            } else {
+                playbackSpeed = 1;
+            }
+            
+            // Update button display
+            const speedButton = document.getElementById('speed-button');
+            speedButton.textContent = `${playbackSpeed}x`;
+            speedButton.title = `Playback Speed: ${playbackSpeed}x`;
+            
+            console.log(`Playback speed set to ${playbackSpeed}x`);
+            
+            // If currently playing, restart animation with new speed
+            if (isPlaying) {
+                stopAnimation();
+                startAnimation();
+            }
+        }
 
+        
+        // Analysis panel toggle functionality (like loop button)
+        function toggleAnalysisPanel() {
+            analysisPanelVisible = !analysisPanelVisible;
+            const toggleButton = document.getElementById('analysis-toggle');
+            const sidebar = document.getElementById('story-sidebar');
+            
+            if (analysisPanelVisible) {
+                // Panel is visible - show it and update button to show "hide" functionality
+                sidebar.style.visibility = 'visible';
+                sidebar.style.opacity = '1';
+                toggleButton.style.backgroundImage = "url('Image_Sources/analysis_enabled.png')";
+                toggleButton.style.backgroundColor = 'transparent';
+                toggleButton.style.backgroundSize = '16px 16px';
+                toggleButton.style.backgroundRepeat = 'no-repeat';
+                toggleButton.style.backgroundPosition = 'center';
+                toggleButton.style.filter = '';
+                toggleButton.title = 'Hide Analysis Panel';
+                console.log('Analysis panel shown');
+            } else {
+                // Panel is hidden - hide it and update button to show "show" functionality  
+                sidebar.style.visibility = 'hidden';
+                sidebar.style.opacity = '0';
+                toggleButton.style.backgroundImage = "url('Image_Sources/analysis.png')";
+                toggleButton.style.backgroundColor = 'transparent';
+                toggleButton.style.backgroundSize = '16px 16px';
+                toggleButton.style.backgroundRepeat = 'no-repeat';
+                toggleButton.style.backgroundPosition = 'center';
+                toggleButton.style.filter = 'brightness(0) invert(1) opacity(0.6)';
+                toggleButton.title = 'Show Analysis Panel';
+                console.log('Analysis panel hidden');
+            }
+        }
+        
         // Initialize the application when the page loads
-        document.addEventListener('DOMContentLoaded', initApp);
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            
+            // Add click event listener to analysis toggle
+            const analysisToggle = document.getElementById('analysis-toggle');
+            if (analysisToggle) {
+                analysisToggle.addEventListener('click', toggleAnalysisPanel);
+            }
+        });
     </script>
 </body>
 </html>

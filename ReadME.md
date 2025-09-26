@@ -11,13 +11,19 @@ This sparked three questions we hope to address:
 
 
 Check out our interactive map to see the analysis we did to answer these questions. 
+
 Website: https://mhc-datathon.github.io/Dataneers/ACE
 
 YouTube Link (Video too large to upload here): https://youtu.be/yr1l16a2GgY
 
 Datasets used: 
 ACE Tickets: https://data.ny.gov/Transportation/MTA-Bus-Automated-Camera-Enforcement-Violations-Be/kh8p-hcbm/data_preview
+
 ACE Implementation Date: https://data.ny.gov/Transportation/MTA-Bus-Automated-Camera-Enforced-Routes-Beginning/ki2b-sg5y/data_preview
-Speed: https://data.ny.gov/Transportation/MTA-Bus-Speeds-2015-2019/cudb-vcni/data_preview; 
-       https://data.ny.gov/Transportation/MTA-Bus-Speeds-2020-2024/6ksi-7cxr/data_preview; 
-       https://data.ny.gov/Transportation/MTA-Bus-Speeds-Beginning-2025/4u4b-jge6/data_preview
+
+Speed: 
+1. https://data.ny.gov/Transportation/MTA-Bus-Speeds-2015-2019/cudb-vcni/data_preview; 
+
+2. https://data.ny.gov/Transportation/MTA-Bus-Speeds-2020-2024/6ksi-7cxr/data_preview; 
+
+3. https://data.ny.gov/Transportation/MTA-Bus-Speeds-Beginning-2025/4u4b-jge6/data_preview
